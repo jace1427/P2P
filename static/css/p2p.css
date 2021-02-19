@@ -1,0 +1,30 @@
+.content {
+    max-width: 750px;
+    margin: auto;
+    overflow: auto;
+}
+
+#left {
+    width: 70%;
+    float: left;
+}
+
+#right {
+    width: 30%;
+    float: right;
+}
+
+#friend_search {
+    height: 75px;
+    font-size: 14pt;
+}
+
+#message {
+    height: 75px;
+    font-size: 14pt;
+}
+
+#message2 {
+    height: 15px;
+    font-size: 14pt;
+}

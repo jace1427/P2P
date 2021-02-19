@@ -1,0 +1,50 @@
+<!-- 
+TODO: 
+    Create title (https://letsbuildui.dev/articles/css-text-effects-five-minimal-examples)
+-->
+<!DOCTYPE HTML>
+<html>
+
+<link rel="stylesheet" href="/static/css/p2p.css" />
+
+<style>
+    body {
+        background-color: #D3D3D3
+    }
+</style>
+
+<body>
+    <div class="content">
+        <div class="split-title">
+            <h1 data-text="Peer-2-Peer">Peer-2-Peer</h1>
+        </div>
+
+        <div id="left">
+            <table style="background-color: #FFFFFF">
+                {% for message in range(10) %}
+                    <tr>
+                        <td>Name: </td>
+                        <td>Message</td>
+                    </tr>
+                {% endfor %}
+            </table>
+
+            <input id="message2" name="message" placeholder="Send a Message..." />
+            <input type="submit" formaction="/message" name="send" value="Send" />
+        </div>
+
+        <div id="right">
+            <label for="contacts">Contacts</label>
+            <table>
+                {% for row in range(10) %}
+                    <tr>
+                        <td>Name</td>
+                        <td><input type="submit" name="{{row}}" value="Message" /></td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>
