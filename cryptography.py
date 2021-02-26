@@ -20,13 +20,13 @@ def string2bytes(string):
 
 
 def bytes2string(_bytes):
-    _bytes.decode('utf-8')
+    return _bytes.decode('utf-8')
 
 
 def _hash(byte_str):
     """
     hash
-        SHA=256 hash function
+        SHA256 hash function
     :param
         byte_str: the python string to be hashed. type: bytes
     :return
@@ -143,7 +143,7 @@ def encrypt_mssg(mssg, key):
         mssg: the message to be encrypted. type: bytes
         key: the key be used in the cipher. type: bytes
     :return
-        returns cipher text. type: bytes
+        ciphertext, tag, nonce. type: bytes, bytes, bytes
     """
     cipher = AES.new(key, AES.MODE_EAX)
     ciphertext, tag = cipher.encrypt_and_digest(mssg)
