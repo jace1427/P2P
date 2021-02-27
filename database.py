@@ -172,6 +172,7 @@ class database():
 Here are the database functions we need (I'm sure I'm repeating functions you've already created above)
 ======================================================================================================="""
 #TODO let us know what type VARCHAR is. is it just a python string or is it a byte string or does either work?
+# NEW: added Port to CONTACTS
 
 def new_user(Username, PasswordHash, IV, Friendcode, PublicKey, PrivateKey):
     """
@@ -182,7 +183,7 @@ def new_user(Username, PasswordHash, IV, Friendcode, PublicKey, PrivateKey):
     return UserID
 
 
-def new_contact(UserID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey):
+def new_contact(UserID, IV, MachineID, Contactname, IP_address, Port, SecretKey, PublicKey):
     """
      create a new contact. 
      Note: the first contact should have ContactID=0 and each subsequent contact's ContactID should be incremented by 1
@@ -210,7 +211,7 @@ def find_user(username):
 def find_contacts(UserID):
     """
     return all contacts of a user
-    :return: list (nested) e.g. [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey],...]
+    :return: list (nested) e.g. [[ContactID, IV, MachineID, Contactname, IP_address, Port, SecretKey, PublicKey],...]
     """
     return contacts
 
