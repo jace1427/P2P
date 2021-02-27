@@ -1,34 +1,36 @@
 """
 Main
-2021/02/22
+2021/02/26
 
 NOTE: A lot of these functions and classes will probably be moved to the network/GUI module
+NOTE: the cryptography module uses byte strings (e.g. b'this is a byte') and database might also.
+NOTE: what is not included in this code/skeleton is how to verify if a message has been received
 """
 import cryptography as c
 import database as d
 
-USER_ID = 0
+USER_ID = 0        # Every user on the local system will have their own ID.
 CONTACT_LIST = []  # [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey],...]
-MESSAGE_LIST = []  # [[(text, bool), (text, bool),...],[(text, bool), (text, bool),...],...]
-KEY = None
-PUBLIC_KEY = None
-PRIVATE_KEY = None  # might need to make a database call everytime the private key is needed rather that do this
-DIFFIE_HELLMAN = None
-#DATABASE = None
+MESSAGE_LIST = []  # [[[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...], ...] something like this?
+DB_KEY = None      # key used for encrypting and decrypting entries in the database
+PUBLIC_KEY = None  # Users public key
+PRIVATE_KEY = None # Users private key
+DIFFIE_HELLMAN = None  # diffie hellman object. see cryptography.py
+# DATABASE = None  # not sure how the database is going to be handled
 
 
 class Message:
-    def __init__(self, user_id, contact_id, message, signature, flag='m', tag=None, nonce=None):
-        self.user_ID = user_id
-        self.contact_ID = contact_id
-        self.message = message
-        self.signature = signature
-        self.flag = flag
-        self.tag = tag
-        self.nonce = nonce
+    def __init__(self, user_id, machine_id, flag, message, signature=None, tag=None, nonce=None):
+        self.user_ID = user_id  # the user's ID on the user's system
+        self.machine_ID = machine_id  # the ID of the contact on the contact's system (different from contactID)
+        self.flag = flag  # flag to help process the message
+        self.message = message  # the message
+        self.signature = signature  # cryptographic signature
+        self.tag = tag  # needed for decrypting the message (should not be encrypted)
+        self.nonce = nonce  # needed for decrypting the message (should not be encrypted)
 
 
-def encode(ip_address, user_id):
+def encode_friend(ip_address, user_id):
     ip_address = ip_address.split('.')
     ip_address = list(map(int, ip_address))
     a = 8
@@ -43,167 +45,159 @@ def encode(ip_address, user_id):
     return friendcode
 
 
-def decode(friendcode):
+def decode_friend(friendcode):
     friendcode = int(friendcode, 16)
     ip_address = []
     while friendcode != 0:
         ip_address.append(friendcode & 255)
         friendcode = friendcode >> 8
-    contact_id = ip_address.pop(0)
+    machine_id = ip_address.pop(0)
     print(ip_address)
     ip_address = '.'.join(map(str, ip_address))
-    return contact_id, ip_address
+    return machine_id, ip_address
 
 
 def create_account(username, password):
-    # check if username is unique. Use CONTACT_LIST
-    # check if password is secure (just check length?)
+    # check if username is unique.
+    # (optional) check if password is secure (just check length?)
     # create public and private key
+    public_key, private_key = c.generate_public_private()
     # create friendcode
     # encrypt friendcode, publicKey, privateKey
-    # TODO DATABASE: create a new user
+    # hash the password
+    # TODO DATABASE: create a new user and return the UserID
+    # set the global variables. could probably be done by running login()
     return NotImplementedError
 
 
+# contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
 def login(username, password):
-    global KEY
-    global CONTACT_LIST
-    global USER_ID
+    global DB_KEY
     # Step 1: Authenticate User
-    password_hash = c.pwd2hash(c.string2bytes(password))
-    #TODO DATABASE: find user based on username and return all of the user's data in a list
-    """if (password_hash == PasswordHash):
-        KEY = c.pwd2key(c.string2bytes(password))
+    password_hash = c.pwd2hash(password)
+    #TODO DATABASE: find user based on username and return all of the user's data in a list or tuple
+    if (password_hash == PasswordHash):
+        # if the correct password is entered
+        DB_KEY = c.pwd2key(c.string2bytes(password))
     else:
-        print("Wrong Password")
-        return False"""
-    # Step 2: get user USERID, PUBLIC_KEY, PRIVATE_KEY
-
+        # if the wrong password is entered
+    # Step 2 (if step 1 is a success): set global variables: UserID, PUBLIC_KEY, PRIVATE_KEY from what database returned
     # Step 3: Create Contact List
-    #TODO DATABASE: return all contacts of a specific User (You'll need to JOIN USERS and CONTACTS)
-    # Create CONTACT_LIST = [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey],...]
+    #TODO DATABASE: return all contacts of a specific User as a nested list (You'll need to JOIN USERS and CONTACTS)
+
+    # this should decrypt the necessary values returned by the database
     for contact in CONTACT_LIST:
         i = 2
         while i != 5:
-            contact[i] = c.decrypt_db(contact[i], KEY, contact[1])
+            contact[i] = c.decrypt_db(contact[i], DB_KEY, contact[1])
     # Step 4: Pull most recent messages of each user
-    #TODO DATABASE: create a function that returns the n most recent messages of a user
+    # TODO DATABASE: create a function that returns the n most recent messages between a user and a contact
+    # loop through the contact list and run the database function to pull the appropriate messages from the database
+    #  use decipher_message_list()
     return NotImplementedError
 
-# [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
+
+# contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
 def add_contact(friendcode, public_key=None):
-    global CONTACT_LIST
-    contact_id, ip_address = decode(friendcode)
-    #TODO Generate new contact ID
-    CONTACT_LIST.append(['Contact_ID_PLACEHOLDER', None, contact_id, ip_address, None, public_key])
-    return send_message(None, contact_id, 'k')
+    # NOTE: there could be issues if both users add a contact at the same time
+    # Initiate creating a new contact
+    # Create a contactID
+    # Get MachineID and IP_address from friendcode
+    # Need to handle Contactname somehow. Either let the user enter it in, or have the contact send that info.
+    # add new Contact in CONTACT_LIST (contact will be incomplete as we don't have SecretKey or PublicKey
+    # I don't think it's worth adding this new contact to the database until the key exchange process is complete
+    # Initiate key exchange by sending the message below. SecretKey and PublicKey will be created in receive_message()
+    message = Message(USER_ID, machineID, 'a1', PUBLIC_KEY, None)
+    #TODO NETWORKING: send this message
+    return True
 
 
+# contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
 def receive_message(message, ip_address):
-    #TODO: need to check if message.contact_ID == USER_ID
-    global MESSAGE_LIST
-    global DIFFIE_HELLMAN
-    # find contact
-    contact = None
-    for i in range(len(CONTACT_LIST)):
-        if CONTACT_LIST[i][4] == ip_address and CONTACT_LIST[i][2] == message.user_ID:
-            contact = CONTACT_LIST[i]
-            break
-    if contact is None:
-        print("Invalid Contact")
-        return False
+    # Step 1: check if message.contact_ID == USER_ID i.e check if message is intended for the current user
+    #  we may have to send an error message back to the sender
+    # Step 2: find contact in CONTACT_LIST based on ip_address and machineID
+    # Step 3: process the message
     if message.flag == 'm':
-        # decrypt message
-        secret_key = contact[5]
+    # decrypt message
+        # create secret key from contact
         plaintext = c.decrypt_mssg(message.message, secret_key, message.tag, message.nonce)
-        # encrypt message for the database
+    # encrypt message for the database
         iv = c.create_iv()
-        ciphertext = c.encrypt_db(plaintext, KEY, iv)
-        # TODO DATABASE: create a new message given: UserID, ContactID, IV, Text
-        MESSAGE_LIST[i].append((plaintext, 0))
-        # TODO not sure what to return here
-        return None
-    elif message.flag == 'a':
-        g = message.message[0]
-        p = message.message[1]
-        value = message.message[2]
-        machineID = message.user_ID  # not a typo
-        userID = message.contact_ID  # not a typo
-        DIFFIE_HELLMAN = c.DiffieHellman(g, p)
-        value = DIFFIE_HELLMAN.create_value()
-        key = DIFFIE_HELLMAN.create_key(value)
-        # TODO: add key to a bunch of stuff...
-        ip_address = CONTACT_LIST[-1][4]  # feels jank to use -1
-        message = send_message(value, CONTACT_LIST[-1][0], 'b')  # feels jank to use -1
-        return message, ip_address
-    elif message.flag == 'b':
-        value = message.message
-        key = DIFFIE_HELLMAN.create_key(value)
-        # TODO: add key to a bunch of stuff...
-        return key
-    elif message.flag == 'k':
-        ip_address = CONTACT_LIST[-1][4]  # feels jank to use -1
-        contactID = CONTACT_LIST[-1][0]  # feels jank to use -1
-        public_key = message.message
-        # add public_key to contact information
-        message = send_message(None, contactID, 'j')
-        return message, ip_address
-    elif message.flag == 'j':
-        ip_address = CONTACT_LIST[-1][4] # feels jank to use -1
-        contactID = CONTACT_LIST[-1][0]  # feels jank to use -1
-        public_key = message.message
-        # add public_key to contact information
-        message = send_message(None, contactID, 'a')
-        return message, ip_address
-    else:
-        print("Message Flag Error")
-        return False
+        ciphertext = c.encrypt_db(plaintext, DB_KEY, iv)
+        # TODO DATABASE: create a new message
 
-
-def send_message(text, contactID, flag='m'):
-    # find contact
-    contact = None
-    for person in CONTACT_LIST:
-        if person[0] == contactID:
-            contact = person
-            break
-    if contact is None:
-        print("Invalid Contact ID")
-        return False
-    ip_address = contact[4]
-    machineID = contact[2]
-    # create message
-    if flag == 'm':
-        secret_key = contact[5]
-        ciphertext, tag, nonce = c.encrypt_mssg(text, secret_key)
-        signature = c.create_signature(text, PRIVATE_KEY)
-        message = Message(USER_ID, machineID, ciphertext, signature, flag, tag, nonce)
-        return message, ip_address
-        # TODO NETWORK: if message with flag 'm' is successfully sent, then add message to database
-    elif flag == 'a':
-        # initiate Diffie Hellman
+        # Add the new message to MESSAGE_LIST and update the GUI if appropriate
+        return True
+    # Below are automatic key exchange protocol messages. These messages should not be kept in the database
+    elif message.flag == 'a1':
+        # flag a1: step 1 of the public key exchange
+        public_key = message.message
+        machineID = message.user_ID
+        # add public_key to contact in CONTACT_LIST
+        message = Message(USER_ID, machineID, 'a2', PUBLIC_KEY)
+        # TODO NETWORKING: send this message
+        return True
+    elif message.flag == 'a2':
+        # flag a2: step 2 of the public key exchange
         global DIFFIE_HELLMAN
+        machineID = message.user_ID
+        public_key = message.message
+        # add public_key to contact in CONTACT_LIST
+        # initiate diffie hellman key exchange
+
         DIFFIE_HELLMAN = c.DiffieHellman()
         g, p = DIFFIE_HELLMAN.create_gp()
         value = DIFFIE_HELLMAN.create_value()
-        message = Message(USER_ID, machineID, [g, p, value], None, 'a')
-        return message, ip_address
-    elif flag == 'b':
-        # response to Diffie Hellman
-        if text is None:
-            global DIFFIE_HELLMAN
-            value = DIFFIE_HELLMAN.create_value()
-        else:
-            value = text
-        message = Message(USER_ID, value, None, 'b')
-        return message, ip_address
-    elif flag == 'k':
-        message = Message(USER_ID, machineID, PUBLIC_KEY, None, 'k')
-        return message, ip_address
-    elif flag == 'j':
-        message = Message(USER_ID, machineID, PUBLIC_KEY, None, 'j')
-        return message, ip_address
+        message = Message(USER_ID, machineID, 'a', (g, p, value))
+        # TODO NETWORKING: send this message
+        return True
+    elif message.flag == 'b1':
+        # flag b1: step 1 of the diffie hellman key exchange
+        global DIFFIE_HELLMAN
+        machineID = message.user_ID
+        g, p, value = message.message
+        DIFFIE_HELLMAN = c.DiffieHellman(g, p)
+        value = DIFFIE_HELLMAN.create_value()
+        key = DIFFIE_HELLMAN.create_key(value)
+        # add key to contact in CONTACT_LIST - this completes the contact
+        #TODO DATABASE add new contact
+        message = Message(USER_ID, machineID, 'b2', value)
+        # TODO NETWORKING: send this message
+        return True
+    elif message.flag == 'b2':
+        global DIFFIE_HELLMAN
+        value = message.message
+        key = DIFFIE_HELLMAN.create_key(value)
+        # add key to contact in CONTACT_LIST - this completes the contact
+        #TODO DATABASE add new contact
+        return True
     else:
         print("Message Flag Error")
         return False
+
+
+# contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
+def send_message(text, contact):
+    # get necessary info
+    ip_address = contact[4]
+    machineID = contact[2]
+    secret_key = contact[5]
+    # create message
+    ciphertext, tag, nonce = c.encrypt_mssg(text, secret_key)
+    signature = c.create_signature(text, PRIVATE_KEY)
+    message = Message(USER_ID, machineID, 'm', ciphertext, signature, tag, nonce)
+    # TODO NETWORK: send message.
+    # TODO NETWORK: if message is successfully sent, update database, MESSAGE_LIST, and GUI if appropriate
+
+
+# [[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...]
+def decipher_message_list(messages):
+    for message in messages:
+        message[4] = c.decrypt_db(message[4], DB_KEY, message[3])
+        message[5] = c.decrypt_db(message[5], DB_KEY, message[3])
+        message[6] = c.decrypt_db(message[6], DB_KEY, message[3])
+    # may need to order the messages by their timestamp
+    # may also want to remove unnecessary information (UserID, ContactID, IV)
+    return messages
 

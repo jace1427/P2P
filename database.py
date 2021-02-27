@@ -166,3 +166,60 @@ class database():
     def list_of_contacts(self, user)-> None:
         
         return self.cursor.execute("SELECT contact_id, IP_address FROM contacts").fetchall()
+
+
+"""=====================================================================================================
+Here are the database functions we need (I'm sure I'm repeating functions you've already created above)
+======================================================================================================="""
+#TODO let us know what type VARCHAR is. is it just a python string or is it a byte string or does either work?
+
+def new_user(Username, PasswordHash, IV, Friendcode, PublicKey, PrivateKey):
+    """
+    create a new user and return the UserID
+    Note: the first user should have UserID=0 and each subsequent user's UserID should be incremented by 1
+    :return str or bytes
+    """
+    return UserID
+
+
+def new_contact(UserID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey):
+    """
+     create a new contact. 
+     Note: the first contact should have ContactID=0 and each subsequent contact's ContactID should be incremented by 1
+     :return None
+    """
+
+
+def new_message(UserID, ContactID, IV, Text, Sent):
+    """
+    create a new message
+    Note: the first message should have MessageID=0 and each subsequent message's MessageID should be incremented by 1
+    Note: import datetime to create a timestamp whenever a new message is created
+    :return: None
+    """
+
+
+def find_user(username):
+    """
+     find a user based on the username
+    :return: tuple
+    """
+    return UserInfo
+
+
+def find_contacts(UserID):
+    """
+    return all contacts of a user
+    :return: list (nested) e.g. [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey],...]
+    """
+    return contacts
+
+
+def find_messages(UserID, ContactID, n):
+    """
+    find the n most recent messages (sent or received) between UserID and ContactID
+    :return: list (nested) e.g. [[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...]
+    """
+    return messages
+
+
