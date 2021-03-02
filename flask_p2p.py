@@ -14,7 +14,7 @@ TODO:
     Make 404 better
 """
 import flask
-from flask import request
+# from flask import request
 
 app = flask.Flask(__name__)
 app.secret_key = bytes(1)
@@ -36,9 +36,7 @@ def page_not_found(error):
 
 @app.route("/send", methods=['POST'])
 def send():
-    app.logger.debug(request.form)
-    flask.flash(u"ERROR: Please submit a distance", "error")
-    return flask.render_template('404.html'), 404
+    return
 
 
 if __name__ == '__main__':

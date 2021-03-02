@@ -20,23 +20,25 @@ body {
 <body>
     <div class="content">
 
-        <div class="title">
-            <h1 data-text="Peer-2-Peer">P2PSecure</h1>
+        <div class="title_left">
+            <h1>P2PSecure</h1>
+        </div>
+        <div class="title_right">
+            <h1 class="misc_right"><a href="{{ url_for("index") }}">Help</a></h1>
+            <h1 class="misc_right"><a href="{{ url_for("index") }}">About</a></h1>
+            <h1 class="misc_right"><a href="{{ url_for("index") }}">Contact Us</a></h1>
         </div>
 
         <div class="left">
             <div class="message_box">
-                <div class="m_l_label">
+                <div class="message_log_label">
                     <label>Message Log</label>
                 </div>
-
                 <div class="message_log">
                     TODO
                 </div>
             </div>
-
             <br />
-
             <form action="/send" method="POST">
                 <input type="text" name="text" class="message" placeholder="..."/>
                 <input type="submit" class="send" value="Send" />
@@ -44,29 +46,41 @@ body {
         </div>
 
         <div class="right">
-            <form>
-                <label>Add a new Contact:</label>
+            <div class="contact_div">
+                <div class="contact_label">
+                    <label>Contacts</label>
+                </div>
+                <nav>
+                    <ul>
+                        {% for row in range(20) %}
+                            <li>
+                                Name
+                                <input class="message_contact" type="submit" name="{{row}}" value="Message" />
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
                 <br />
-                <label>IP:</label>
-                <input name="IP" placeholder="0.0.0.0" />
-
-                <label>Name:</label>
-                <input name="IP" placeholder="Name" />
-            </form>
-
-            <h2>Contacts</h2>
-            <label>Search:</label>
-            <input type="search" class="friend_search" name="friend_search" />
-
-            <table>
-                {% for row in range(10) %}
-                    <tr>
-                        <td>Name</td>
-                        <td><input type="submit" name="{{row}}" value="Message" /></td>
-                    </tr>
-                {% endfor %}
-            </table>
+                <div class="add_contact_label">
+                    <label>Add Contact</label>
+                </div>
+                <br />
+                <div class="add_contact_form">
+                    <form>
+                        <div class="add_contact_form_labels">
+                            <label>Name:</label>
+                        </div>
+                        <input name="IP" class="add_contact_fields" placeholder="Name" />
+                        <div class="add_contact_form_labels">
+                            <label>IPV4 Address:</label>
+                        </div>
+                        <input name="name" class="add_contact_fields"placeholder="0.0.0.0" />
+                        <input type="submit" class="add_contact" value="Add Contact" />
+                    </form>
+                </div>
+            </div>
         </div>
+
     </div>
 </body>
 

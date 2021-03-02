@@ -1,25 +1,29 @@
 .content {
     max-width: 1500px;
     margin: auto;
-    overflow: auto;
 }
 
-.title {
+.title_left {
     color: #802BB1;
+    display: flex;
+    align-items: center;
+    width: 65%;
+    float: left;
+    height: 80px;
 }
 
-.message_box {
-    background-color: #4c495d;
+.title_right {
+    color: #802BB1;
+    display: flex;
+    align-items: center;
+    width: 30%;
+    float: right;
+    height: 80px;
 }
 
-.m_l_label {
-    width: 100%;
-    text-align: center;
-}
-
-.message_log {
-    height: 400px;
-    background-color: #FFFFFF;
+.misc_right {
+    font-size: 1.5em;
+    width: 150px;
 }
 
 .left {
@@ -32,9 +36,31 @@
     float: right;
 }
 
+.message_box {
+    background-color: #4C495D;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-bottom: 25px;
+}
+
+.message_log_label {
+    width: 100%;
+    text-align: center;
+    color: #FFFFFF;
+    font-size: 22px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+.message_log {
+    height: 400px;
+    background-color: #D1D7E0;
+}
+
 .send {
     float: right;
     width: 10%;
+    height: 30px;
 }
 
 .message {
@@ -43,7 +69,65 @@
     font-size: 12pt;
 }
 
-.friend_search {
+.contact_div {
+    background-color: #4C495D;
+    height: 720px;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-bottom: 25px;
+}
+
+nav ul {
+    height: 400px;
+    overflow: hidden;
+    overflow-y: scroll;
+    background-color: #D1D7E0;
+    margin: 0;
+    padding: 0;
+}
+
+li {
     height: 25px;
+}
+
+.contact_label {
+    width: 100%;
+    text-align: center;
+    color: #FFFFFF;
+    font-size: 22px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+.message_contact {
+    float: right;
+}
+
+.add_contact_label {
+    width: 100%;
+    text-align: center;
+    color: #FFFFFF;
+    font-size: 22px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+.add_contact_form_labels {
+    float: left;
+    font-size: 20px;
+    color: #FFFFFF;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+.add_contact {
+    float: right;
+    height: 30px;
+    margin-top: 10px;
+}
+
+.add_contact_fields {
+    height: 25px;
+    width: 97%;
     font-size: 12pt;
 }
