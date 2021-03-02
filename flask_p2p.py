@@ -19,10 +19,31 @@ import flask
 app = flask.Flask(__name__)
 app.secret_key = bytes(1)
 
-
 @app.route("/")
-@app.route("/index")
+@app.route("/login")
+def login():
+    return flask.render_template("login.html")
+
+@app.route("/registration")
+def registration():
+    return flask.render_template("register.html")
+
+@app.route("/help")
+def help_page():
+    return flask.render_template("help.html")
+
+@app.route("/about")
+def about_page():
+    return flask.render_template("about.html")
+
+@app.route("/contactus")
+def contact_us():
+    return flask.render_template("contactus.html")
+
+# @app.route("/")
+@app.route("/index", methods=['POST'])
 def index():
+    app.logger.debug(request.form)
     app.logger.debug("Main page entry")
     return flask.render_template("p2p.html")
 
@@ -36,7 +57,9 @@ def page_not_found(error):
 
 @app.route("/send", methods=['POST'])
 def send():
-    return
+    app.logger.debug(request.form)
+    flask.flash(u"ERROR: Please submit a distance", "error")
+    return flask.render_template('404.html'), 404
 
 
 if __name__ == '__main__':

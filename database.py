@@ -17,9 +17,17 @@
 
 import sqlite3
 
+#####################
+## Global Variable ##
+#####################
+# The below ints increment the ContactID, UserID, and message_id keys respectively. 
+# Starting from zero, each time an id is assigned, the counter increments
+int contact_counter = 0;
+int user_counter = 0;
+int message_counter = 0;
 
 """
-    database class creates an sql database object that we 
+    Database class creates an sql database object that we 
     can store and extract data to
 """
 
@@ -55,7 +63,7 @@ class database():
     def create_users(self):
 
         # create users table
-        self.cursor.execute("CREATE TABLE users (userID INT, username VARCHAR(45), PasswordHash VARCHAR(45), IV VARCHAR(45), FriendCode VARCHAR(45), PublicKey VARCHAR(45), PrivateKey VARCHAR(45))")
+        self.cursor.execute("CREATE TABLE users (userID INT, username VARCHAR(45), PasswordHash VARCHAR(45), IV VARCHAR(45), Port INT, PublicKey VARCHAR(45), PrivateKey VARCHAR(45))")
 
         return
 
@@ -71,7 +79,7 @@ class database():
     def create_contacts(self):
         
         # create contacts table
-        self.cursor.execute("CREATE TABLE contacts (USERS_UserID INT, ContactID INT, IV VARCHAR(45), MachineID INT, ContactName VARCHAR(45), IP_address VARCHAR(45), SecretKey VARCHAR(45), PublicKey VARCHAR(45))")
+        self.cursor.execute("CREATE TABLE contacts (USERS_UserID INT, ContactID INT, IV VARCHAR(45), MachineID INT, ContactName VARCHAR(45), IP_address VARCHAR(45), Port INT, SecretKey VARCHAR(45), PublicKey VARCHAR(45))")
         
         return
 
@@ -87,7 +95,7 @@ class database():
     def create_messages(self):
         
         # creates messages table
-        self.cursor.execute("CREATE TABLE messages (CONTACTS_USER_UserID INT, CONTACTS_ContactID INT, MessageID INT, IV VARCHAR(45), Text VARCHAR(255), Timestamp DATETIME, Sent Int)")
+        self.cursor.execute("CREATE TABLE messages (CONTACTS_USER_UserID INT, CONTACTS_ContactID INT, MessageID INT, IV VARCHAR(45), Text VARCHAR(255), Timestamp DATETIME, Sent INT)")
 
         return 
 
@@ -166,6 +174,18 @@ class database():
     def list_of_contacts(self, user)-> None:
         
         return self.cursor.execute("SELECT contact_id, IP_address FROM contacts").fetchall()
+    
+    """
+    loads a table to a csv file in the current directory
+    new file made if name doesn't match currently existing files in the current directory
+    """
+    def load_table():
+        pass
+
+    def close():
+
+        
+
 
 
 """=====================================================================================================
@@ -174,21 +194,45 @@ Here are the database functions we need (I'm sure I'm repeating functions you've
 #TODO let us know what type VARCHAR is. is it just a python string or is it a byte string or does either work?
 # NEW: added Port to CONTACTS
 
-def new_user(Username, PasswordHash, IV, Friendcode, PublicKey, PrivateKey):
+
+def new_user(Username : str, PasswordHash : str, IV : str, IP_address : str, Port : int, PublicKey : str, PrivateKey: str)->int:
     """
     create a new user and return the UserID
     Note: the first user should have UserID=0 and each subsequent user's UserID should be incremented by 1
     :return str or bytes
     """
+
+    # set id equal to current counter value
+    int UserID = user_counter;
+
+    # insert the new user into our users table
+    insert(users, [UserID, Username, PasswordHash, IV, IP_address, Port, PublicKey, PrivateKey])
+
+    # increment by 1, so the next user will 
+    # get a unique id
+    user_counter = user_counter + 1;
+
     return UserID
 
 
-def new_contact(UserID, IV, MachineID, Contactname, IP_address, Port, SecretKey, PublicKey):
+def new_contact(UserID : int, IV : str, MachineID : int, Contactname : str, IP_address : str, Port : int, SecretKey: str, PublicKey: str)->int:
     """
      create a new contact. 
      Note: the first contact should have ContactID=0 and each subsequent contact's ContactID should be incremented by 1
      :return None
     """
+    
+    # set id equal to current counter value
+    int ContactID = contact_counter;
+
+    # insert the new contact into our contacts table
+    insert(contacts, [UserID, ContactID, IV, MachineID, Contactname, IP_address, Port, SecretKey, PublicKey])
+
+    # increment by 1, so the next contact will 
+    # get a unique id
+    contact_counter = contact_counter + 1;
+
+    return ContactID
 
 
 def new_message(UserID, ContactID, IV, Text, Sent):
@@ -198,6 +242,19 @@ def new_message(UserID, ContactID, IV, Text, Sent):
     Note: import datetime to create a timestamp whenever a new message is created
     :return: None
     """
+    
+    # set id equal to current counter value
+    int MessageID = message_counter;
+
+    # insert the new contact into our contacts table
+    insert(contacts, [UserID, ContactID, IV, MachineID, Contactname, IP_address, Port, SecretKey, PublicKey])
+
+    # increment by 1, so the next user will 
+    # get a unique id
+    user_counter = user_counter + 1;
+
+    return ContactID
+
 
 
 def find_user(username):
