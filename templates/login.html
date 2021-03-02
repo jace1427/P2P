@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+  <link href="static/css/p2p.css" rel="stylesheet" />
+</head>
+
+<style>
+
+  body {
+    background-color: #2D283E
+  }
+
+</style>
+
+<head>
+  <div class="content">
+    <div class="header">
+
+      <a href="/login">
+        <img src="/static/imgs/p2psecure-logo.png" alt="P2PSecure"
+        width="376" height="57" style="position:absolute; top:30px; left:30px"/>
+      </a>
+
+      <a href="/help">
+        <p class="navigation font-30" style="top: 10px; left: 1497px;">Help</p>
+      </a>
+
+      <a href="/about">
+        <p class="navigation font-30" style="top: 10px; left: 1590px;">About</p>
+      </a>
+
+      <a href="/contactus">
+        <p class="navigation font-30" style="top: 10px; left: 1700px;">Contact Us</p>
+      </a>
+    </div>
+</head>
+
+<body>
+
+  <div class="box" style="width: 600px; height: 500px; top: 150px; left: 20px"></div>
+  <div class="box-header" style="top: 160px; left: 275px">Log In</div>
+
+  <form action="/index" method="POST">
+    <input type="username" name="username-input" class="textbox username" placeholder="Username"/>
+    <input type="password" name="password-input" class="textbox password" placeholder="Password"/>
+    <input type="submit" class="login-buttom" value="Log in" style="position:absolute; top: 404px; left: 452px; font-size: 18px"/>
+  </form>
+
+  <a href="/registration">
+    <p class="registration font-22" style="top: 450px; left: 200px">First-time user click here</p>
+  </a?
+
+</body>
