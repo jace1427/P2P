@@ -1,30 +1,49 @@
 .content {
-    max-width: 750px;
+    max-width: 1500px;
     margin: auto;
     overflow: auto;
 }
 
-#left {
-    width: 70%;
+.title {
+    color: #802BB1;
+}
+
+.message_box {
+    background-color: #4c495d;
+}
+
+.m_l_label {
+    width: 100%;
+    text-align: center;
+}
+
+.message_log {
+    height: 400px;
+    background-color: #FFFFFF;
+}
+
+.left {
+    width: 65%;
     float: left;
 }
 
-#right {
-    width: 30%;
+.right {
+    width: 25%;
     float: right;
 }
 
-#friend_search {
-    height: 75px;
-    font-size: 14pt;
+.send {
+    float: right;
+    width: 10%;
 }
 
-#message {
-    height: 75px;
-    font-size: 14pt;
+.message {
+    height: 25px;
+    width: 85%;
+    font-size: 12pt;
 }
 
-#message2 {
-    height: 15px;
-    font-size: 14pt;
+.friend_search {
+    height: 25px;
+    font-size: 12pt;
 }
