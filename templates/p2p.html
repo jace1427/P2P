@@ -2,41 +2,62 @@
 TODO: 
     Create title (https://letsbuildui.dev/articles/css-text-effects-five-minimal-examples)
 -->
-<!DOCTYPE HTML>
+<!DOCTYPE HTML> 
 <html>
 
-<link rel="stylesheet" href="/static/css/p2p.css" />
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <link rel="stylesheet" href="/static/css/p2p.css" />
+</head>
 
-<style>
-    body {
-        background-color: #D3D3D3
-    }
+<style type="text/css">
+body {
+    background-color: #2D283E
+}
 </style>
 
 <body>
-<div class="content">
-    <form role="form" action="/message">
+    <div class="content">
 
-        <div class="split-title">
-            <h1 data-text="Peer-2-Peer">Peer-2-Peer</h1>
+        <div class="title">
+            <h1 data-text="Peer-2-Peer">P2PSecure</h1>
         </div>
 
-        <div id="left">
-            <label for="friend_search">Enter a Friend Code or IP Address:</label>
-            <br />
-            <input type="search" id="friend_search" name="friend_search" />
+        <div class="left">
+            <div class="message_box">
+                <div class="m_l_label">
+                    <label>Message Log</label>
+                </div>
+
+                <div class="message_log">
+                    TODO
+                </div>
+            </div>
 
             <br />
 
-            <label for="message">Message:</label>
-            <br />
-            <input id="message" name="message" />
-            <br />
-            <input type="submit" name="send" value="Send" />
+            <form action="/send" method="POST">
+                <input type="text" name="text" class="message" placeholder="..."/>
+                <input type="submit" class="send" value="Send" />
+            </form>
         </div>
 
-        <div id="right">
-            <label for="contacts">Contacts</label>
+        <div class="right">
+            <form>
+                <label>Add a new Contact:</label>
+                <br />
+                <label>IP:</label>
+                <input name="IP" placeholder="0.0.0.0" />
+
+                <label>Name:</label>
+                <input name="IP" placeholder="Name" />
+            </form>
+
+            <h2>Contacts</h2>
+            <label>Search:</label>
+            <input type="search" class="friend_search" name="friend_search" />
+
             <table>
                 {% for row in range(10) %}
                     <tr>
@@ -46,9 +67,7 @@ TODO:
                 {% endfor %}
             </table>
         </div>
-
-    </form>
-</div>
+    </div>
 </body>
 
 </html>
