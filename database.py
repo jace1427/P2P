@@ -166,6 +166,18 @@ class database():
     def list_of_contacts(self, user)-> None:
         
         return self.cursor.execute("SELECT contact_id, IP_address FROM contacts").fetchall()
+    
+    """
+    loads a table to a csv file in the current directory
+    new file made if name doesn't match currently existing files in the current directory
+    """
+    def load_table():
+        pass
+
+    def close():
+
+        
+
 
 
 """=====================================================================================================
