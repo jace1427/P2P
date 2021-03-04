@@ -165,6 +165,8 @@ def receive_message(connection, address):
     # Step 2: find contact in CONTACT_LIST based on ip_address and machineID
     # Step 3: process the message
 
+    global DIFFIE_HELLMAN
+
     print("you have received a message from: ", address)
 
     # NETWORK
@@ -219,7 +221,6 @@ def receive_message(connection, address):
 
     elif message.flag == 'a2':
         # flag a2: step 2 of the public key exchange
-        global DIFFIE_HELLMAN
         machineID = message.user_ID
         public_key = message.message
 
@@ -240,7 +241,6 @@ def receive_message(connection, address):
 
     elif message.flag == 'b1':
         # flag b1: step 1 of the diffie hellman key exchange
-        global DIFFIE_HELLMAN
         machineID = message.user_ID
         g, p, value = message.message
         DIFFIE_HELLMAN = c.DiffieHellman(g, p)
@@ -256,7 +256,6 @@ def receive_message(connection, address):
         return True
 
     elif message.flag == 'b2':
-        global DIFFIE_HELLMAN
         value = message.message
         key = DIFFIE_HELLMAN.create_key(value)
         # add key to contact in CONTACT_LIST - this completes the contact
