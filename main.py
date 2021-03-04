@@ -15,6 +15,8 @@ import sys
 import traceback
 import pickle
 
+from requests import get
+
 USER_ID = 0        # Every user on the local system will have their own ID.
 CONTACT_LIST = []  # [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey],...]
 MESSAGE_LIST = []  # [[[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...], ...] something like this?
@@ -75,8 +77,11 @@ def create_account(username, password):
     # (optional) check if password is secure (just check length?)
     # create public and private key
     PUBLIC_KEY, PRIVATE_KEY = c.generate_public_private()
+
+    # get my public ip address
+    public_ip = get("http://ipgrab.io").text
     # create friendcode
-    friendcode = encode_friend(SERVER_IP, 0)
+    friendcode = encode_friend(public_ip, USER_ID)
     # encrypt friendcode, publicKey, privateKey
 
     print("PUBLIC_KEY: ", PUBLIC_KEY)
@@ -190,41 +195,25 @@ def receive_message(connection, address):
 
     # Below are automatic key exchange protocol messages. These messages should not be kept in the database
     elif message.flag == 'a1':
-        # someone has added us as a contact. 
-        # we need to add them to our contact list
-        new_contact = []
-
-        # Create a contactID
-        if len(CONTACT_LIST) == 0:
-        # first contact
-            ContactID = 1
-        else:
-            ContactID = CONTACT_LIST[-1][0] + 1
-
-        new_contact.append(ContactID)
-        new_contact.append(c.create_iv())
-        new_contact.append(0)
-        new_contact.append("Placeholder name")
-        new_contact.append(adress)
-        new_contact.append("placeholder secret key")
-
 
         # flag a1: step 1 of the public key exchange
         public_key = message.message
         machineID = message.user_ID
 
-        # add public_key and machineID to contact in CONTACT_LIST
-        new_contact[2] = machineID
-        new_contact.append(public_key)
+        # someone has added us as a contact. 
+        # we need to add them to our contact list
 
-        # add new contact to contact list
-        CONTACT_LIST.append(new_contact)
+        # generate friendcode 
+        friendcode = encode_friend(address[0], machineID)
+
+        # add contact
+        add_contact(friendcode, public_key, 1)
 
         # create message object
         new_message = Message(USER_ID, machineID, 'a2', PUBLIC_KEY)
 
         # NETWORKING: send this message
-        send_message(new_message, new_contact)
+        send_message(new_message, CONTACT_LIST[-1])
 
         return True
 
