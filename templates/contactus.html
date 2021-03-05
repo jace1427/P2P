@@ -2,38 +2,39 @@
 <html lang="en">
 
 <head>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
-  <link href="static/css/p2p.css" rel="stylesheet" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <link href="static/css/p2p.css" rel="stylesheet" />
+
+    <style>
+
+      body {
+        background-color: #2D283E
+      }
+
+    </style>
 </head>
 
-<style>
-
-  body {
-    background-color: #2D283E
-  }
-
-</style>
-
 <head>
-  <div class="content">
-    <div class="header">
+    <div class="content">
+        <div class="title_left">
+            <a href="/login">
+                <img class="title_image" src="/static/imgs/p2psecure-logo.png" alt="P2PSecure"/>
+            </a>
+        </div>
+        <div class="title_right">
+            <h1 class="title_help">
+                <a href="/help" class="title_link">Help</a>
+            </h1>
 
-      <a href="/login">
-        <img src="/static/imgs/p2psecure-logo.png" alt="P2PSecure"
-        width="376" height="57" style="position:absolute; top:30px; left:30px"/>
-      </a>
+            <h1 class="title_about">
+                <a href="/about" class="title_link">About</a>
+            </h1>
 
-      <a href="/help">
-        <p class="navigation font-30" style="top: 10px; left: 1497px;">Help</p>
-      </a>
+            <h1 class="title_contactus">
+                <a href="/contactus" class="title_link">Contact Us</a>
+            </h1>
+        </div>
 
-      <a href="/about">
-        <p class="navigation font-30" style="top: 10px; left: 1590px;">About</p>
-      </a>
-
-      <a href="/contactus">
-        <p class="navigation font-30" style="top: 10px; left: 1700px;">Contact Us</p>
-      </a>
     </div>
 </head>

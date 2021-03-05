@@ -1,5 +1,5 @@
 .content {
-    max-width: 1500px;
+    max-width: 1700px;
     margin: auto;
 }
 
@@ -10,15 +10,17 @@
     width: 65%;
     float: left;
     height: 80px;
+    margin-bottom: 25px;
 }
 
 .title_right {
     color: #802BB1;
     display: flex;
     align-items: center;
-    width: 30%;
+    width: 23.3%;
     float: right;
     height: 80px;
+    margin-bottom: 25px;
 }
 
 .misc_right {
@@ -43,13 +45,69 @@
     padding-bottom: 25px;
 }
 
+.login_box {
+    background-color: #4C495D;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-bottom: 35px;
+    width: 50%
+}
+
+.register_box {
+    background-color: #4C495D;
+    padding-left: 25px;
+    padding-right: 25px;
+    padding-bottom: 63px;
+    width: 50%
+}
+
 .message_log_label {
     width: 100%;
     text-align: center;
     color: #FFFFFF;
-    font-size: 22px;
+    font-size: 24px;
+    font-family: Arial, sans-serif;
+    padding-bottom: 20px;
+    padding-top: 15px;
+}
+
+.contact_label {
+    width: 100%;
+    text-align: center;
+    color: #FFFFFF;
+    font-size: 24px;
+    font-family: Arial, sans-serif;
+    padding-bottom: 20px;
+    padding-top: 15px;
+}
+
+.add_contact_label {
+    width: 100%;
+    text-align: center;
+    color: #FFFFFF;
+    font-size: 24px;
+    font-family: Arial, sans-serif;
     padding-bottom: 10px;
     padding-top: 10px;
+}
+
+.add_contact_form_labels {
+    float: left;
+    font-size: 20px;
+    color: #FFFFFF;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+.login_label {
+    color: #FFFFFF;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin-left: 0.9%;
+    margin-bottom: 20px;
+    padding-top: 15px;
+    padding-bottom: 30px;
+    font-size: 26px;
 }
 
 .message_log {
@@ -90,34 +148,8 @@ li {
     height: 25px;
 }
 
-.contact_label {
-    width: 100%;
-    text-align: center;
-    color: #FFFFFF;
-    font-size: 22px;
-    padding-bottom: 10px;
-    padding-top: 10px;
-}
-
 .message_contact {
     float: right;
-}
-
-.add_contact_label {
-    width: 100%;
-    text-align: center;
-    color: #FFFFFF;
-    font-size: 22px;
-    padding-bottom: 10px;
-    padding-top: 10px;
-}
-
-.add_contact_form_labels {
-    float: left;
-    font-size: 20px;
-    color: #FFFFFF;
-    padding-bottom: 10px;
-    padding-top: 10px;
 }
 
 .add_contact {
@@ -130,4 +162,102 @@ li {
     height: 25px;
     width: 97%;
     font-size: 12pt;
+}
+
+.registration_link {
+    /* position: absolute; */
+    font-family: Arial, sans-serif;
+    font-size: 24px;
+    color: #2D283E;
+    text-decoration: underline;
+    margin-left: 15%;
+    /* margin-bottom: 30px; */
+    /* white-space: nowrap; */
+}
+
+.registration_link:hover {
+    text-decoration: bold;
+    color: #38314f;
+}
+
+.registration_link:visited {
+    .registration
+}
+
+.textbox {
+    /* position: absolute; */
+    background-color: #d1d7e0;
+    /* padding: 30px; */
+}
+
+.username_box {
+    width: 78%;
+    height: 24px;
+    font-size: 20px;
+    margin-right: 50%;
+    margin-left: 9%;
+    margin-bottom: 50px;
+}
+
+.password_box {
+    width: 78%;
+    height: 24px;
+    font-size: 20px;
+    margin-left: 9%;
+    margin-bottom: 50px;
+}
+
+.login_button {
+    width: auto;
+    margin-left: 10%;
+    margin-right: 12%;
+    float: right;
+    font-size: 22px;
+}
+
+.register_button{
+    width: auto;
+    margin-left: 5%;
+    margin-right: 12%;
+    float: right;
+    font-size: 22px;
+}
+
+.title_link {
+    color: #802BB1;
+    font-family: Arial, sans-serif;
+    font-size: 30px;
+    font-weight: normal;
+    text-decoration: underline;
+    white-space: nowrap;
+}
+
+.title_link:hover {
+    text-decoration: bold;
+    color: #a936eb;
+}
+
+.title_link:visited {}
+
+.title_help{
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.title_about {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.title_contactus{
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.title_image {
+    width: 376px;
+    height: 57px;
+    left: 1.56%;
+    top: 2.78%;
+    padding-right: 15px;
 }

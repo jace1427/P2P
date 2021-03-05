@@ -1,8 +1,8 @@
-<!-- 
-TODO: 
+<!--
+TODO:
     Create title (https://letsbuildui.dev/articles/css-text-effects-five-minimal-examples)
 -->
-<!DOCTYPE HTML> 
+<!DOCTYPE HTML>
 <html>
 
 <head>
@@ -19,15 +19,33 @@ body {
 
 <body>
     <div class="content">
-
         <div class="title_left">
+            <a href="/login">
+                <img class="title_image" src="/static/imgs/p2psecure-logo.png" alt="P2PSecure"/>
+            </a>
+        </div>
+
+        <div class="title_right">
+            <h1 class="title_help">
+                <a href="/help" class="title_link">Help</a>
+            </h1>
+
+            <h1 class="title_about">
+                <a href="/about" class="title_link">About</a>
+            </h1>
+
+            <h1 class="title_contactus">
+                <a href="/contactus" class="title_link">Contact Us</a>
+            </h1>
+        </div>
+        <!-- <div class="title_left">
             <h1>P2PSecure</h1>
         </div>
         <div class="title_right">
             <h1 class="misc_right"><a href="{{ url_for("index") }}">Help</a></h1>
             <h1 class="misc_right"><a href="{{ url_for("index") }}">About</a></h1>
             <h1 class="misc_right"><a href="{{ url_for("index") }}">Contact Us</a></h1>
-        </div>
+        </div> -->
 
         <div class="left">
             <div class="message_box">
