@@ -17,6 +17,11 @@ import pickle
 
 from requests import get
 
+import flask
+import main
+from flask import request
+
+
 USER_ID = 0        # Every user on the local system will have their own ID.
 CONTACT_LIST = []  # [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey, Port#],...]
 MESSAGE_LIST = []  # [[[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...], ...] something like this?
@@ -24,7 +29,26 @@ DB_KEY = None      # key used for encrypting and decrypting entries in the datab
 PUBLIC_KEY = None  # Users public key
 PRIVATE_KEY = None # Users private key
 DIFFIE_HELLMAN = None  # diffie hellman object. see cryptography.py
-# DATABASE = None  # not sure how the database is going to be handled
+
+def initialize_database(db_name: str):
+    try:
+        db_file = open(db_name, "r")
+        db_file.close()
+        print("database " + db_name + " already exists")
+        return d.database(db_name)
+    except:
+        db = d.database(db_name)
+        db.create_users()
+        print("created users table")
+        db.create_contacts()
+        print("created contacts table")
+        db.create_messages()
+        print("created messages table")
+        return db
+
+DATABASE = initialize_database("Primary") # not sure how the database is going to be handled
+
+
 
 # networking constants
 
@@ -43,6 +67,11 @@ class Message:
         self.signature = signature  # cryptographic signature
         self.tag = tag  # needed for decrypting the message (should not be encrypted)
         self.nonce = nonce  # needed for decrypting the message (should not be encrypted)
+
+def get_user_ip() -> str:
+    public_ip = get("http://ipgrab.io").text
+    # print("public ip: ", public_ip)
+    return public_ip[:(len(public_ip)-1)]
 
 # NOTE: TODO need to add port number
 def encode_friend(ip_address, user_id):
@@ -72,44 +101,107 @@ def decode_friend(friendcode):
     return machine_id, ip_address
 
 # TODO Will need updating with friendcode that takes port
-def create_account(username, password):
-    # check if username is unique.
+def create_account(username: str, password: str):
+
+    print("Creating account...")
+    # check if username is unique
+    unique = DATABASE.find_user(username)
+    DATABASE.close()
+
+    if unique:
+        # this may have to be reworked to include the flask functionality
+        # of displaying a specific page or error message upon receiving
+        # an invalid/in-use username
+        print("User already exists")
+        return None
+
     # (optional) check if password is secure (just check length?)
+    # TODO IF WE HAVE TIME
+
     # create public and private key
-    PUBLIC_KEY, PRIVATE_KEY = c.generate_public_private()
+    PublicKey, PrivateKey = c.generate_public_private()
 
-    # get my public ip address
-    public_ip = get("http://ipgrab.io").text
-    print("public ip: ", public_ip)
-    # create friendcode
-    friendcode = encode_friend(public_ip, USER_ID)
-    # encrypt friendcode, publicKey, privateKey
+    # generate hash of user's password
+    PasswordHash = c.pwd2hash(c.string2bytes(password))
 
-    #print("PUBLIC_KEY: ", PUBLIC_KEY)
-    #print("PRIVATE_KEY: ", PRIVATE_KEY)
-    #print("friendcode: ", friendcode)
-    #print("username: ", username)
-    #print("password: ", password)
+    # user's local encryption key, not stored as global
+    # variable yet, this will be done during login
+    db_key = c.pwd2key(c.string2bytes(password))
 
-    # hash the password
-    # TODO DATABASE: create a new user and return the UserID
-    # set the global variables. could probably be done by running login()
+    # generate initialization vector for this user
+    User_IV = c.create_iv()
+
+    # get public ip address (must be connected to internet, otherwise blank)
+    IP_address = get_user_ip()
+
+    # encrypt publicKey, privateKey
+    enc_PublicKey = c.encrypt_db(PublicKey, db_key, User_IV)
+    enc_PrivateKey = c.encrypt_db(PrivateKey, db_key, User_IV)
+    enc_PORT = c.encrypt_db(c.string2bytes(str(PORT)), db_key, User_IV)
+    enc_IP_address = c.encrypt_db(c.string2bytes(IP_address), db_key, User_IV)
+
+    # anything which is initially stored as bytes must be encoded
+    # as a base64 byte string and converted to a python string before
+    # being added to the database
+    UserID = DATABASE.new_user(username,
+                               c.bytes2string(c.bytes2base64(PasswordHash)),
+                               c.bytes2string(c.bytes2base64(User_IV)),
+                               c.bytes2string(c.bytes2base64(enc_IP_address)),
+                               c.bytes2string(c.bytes2base64(enc_PORT)),
+                               c.bytes2string(c.bytes2base64(enc_PublicKey)),
+                               c.bytes2string(c.bytes2base64(enc_PrivateKey)))
+    DATABASE.close()
+
+    print(f"New user {username} created! "
+          f"UserID: {UserID}")
+
+    # global variables will need to be set in login, but this may change
+    # when we figure out how to make flask and sql play nice
     return True
 
 
 # contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
 def login(username, password):
+
+    # Step 0: find if user with given username exists in the system
+    user_info = DATABASE.find_user(username)
+    if user_info:
+        user_info = user_info[0]
+        print(f"User {user_info[1]} found!")
+        PasswordHash = c.base642bytes(c.string2bytes(user_info[2]))
+    else:
+        # database will return empty list if user not found
+        print("User not found")
+        return None
+
     global DB_KEY
     # Step 1: Authenticate User
-    password_hash = c.pwd2hash(password)
-    #TODO DATABASE: find user based on username and return all of the user's data in a list or tuple
+    password_hash = c.pwd2hash(c.string2bytes(password))
+
+    # Step 1a: check if password's hash matches stored hash
+    print(password_hash)
+    print(PasswordHash)
     if (password_hash == PasswordHash):
+        print("Password was correct!")
         # if the correct password is entered
         DB_KEY = c.pwd2key(c.string2bytes(password))
+        UserID = int(user_info[0])
+        User_IV = c.base642bytes(c.string2bytes(user_info[3]))
+        IP_Adress = c.base642bytes(c.string2bytes(user_info[4]))
+        User_PORT = c.base642bytes(c.string2bytes(user_info[5]))
+        PublicKey = c.base642bytes(c.string2bytes(user_info[6]))
+        PrivateKey = c.base642bytes(c.string2bytes(user_info[7]))
     else:
-        pass
+        print("Incorrect password")
         # if the wrong password is entered
+        return None
+
     # Step 2 (if step 1 is a success): set global variables: UserID, PUBLIC_KEY, PRIVATE_KEY from what database returned
+    global USER_ID, PUBLIC_KEY, PRIVATE_KEY
+    USER_ID = UserID
+    PUBLIC_KEY = c.decrypt_db(PublicKey, DB_KEY, User_IV)
+    PRIVATE_KEY = c.decrypt_db(PrivateKey, DB_KEY, User_IV)
+
     # Step 3: Create Contact List
     #TODO DATABASE: return all contacts of a specific User as a nested list (You'll need to JOIN USERS and CONTACTS)
 
@@ -125,6 +217,13 @@ def login(username, password):
     return NotImplementedError
 
 def add_contact(ip_address, port, Contactname, public_key=None):
+    # I haven't gotten to this yet, but I'm assuming that this will
+    # actually need to store a contact in the database rather than
+    # updating the global contact list variable.
+    # I may be wrong, but we'll probably need a helper function
+    # for updating the local contact list whenever a new user logs in
+    # and we can leave this to be database insertion
+
     new_contact = []
 
     # Create a contactID

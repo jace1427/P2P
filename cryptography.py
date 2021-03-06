@@ -11,6 +11,7 @@ from Crypto.Random import get_random_bytes
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Signature import pkcs1_15
+import base64
 
 HASHNUM = 100
 
@@ -21,6 +22,22 @@ def string2bytes(string):
 
 def bytes2string(_bytes):
     return _bytes.decode('utf-8')
+
+
+def bytes2base64(_bytes):
+    """
+    bytes2base64
+        converts a byte string to base64
+    """
+    return base64.b64encode(_bytes)
+
+
+def base642bytes(_base64):
+    """
+    base642bytes
+        converts a base64 byte string to its original encoding
+    """
+    return base64.b64decode(_base64)
 
 
 def _hash(byte_str):
@@ -97,6 +114,9 @@ def decrypt_db(mssg, key, iv):
     :return
         returns plain text of the encoded message. type: bytes
     """
+    # print(mssg)
+    # print(key)
+    # print(iv)
     cipher = DES3.new(key, DES3.MODE_CFB, iv)
     plaintext = cipher.decrypt(mssg)
     return plaintext
