@@ -6,29 +6,39 @@ NOTE: A lot of these functions and classes will probably be moved to the network
 NOTE: the cryptography module uses byte strings (e.g. b'this is a byte') and database might also.
 NOTE: what is not included in this code/skeleton is how to verify if a message has been received
 """
+
+# our modules
 import cryptography as c
 import database as d
 
+# needed for networking
 import socket
 import threading
 import sys
 import traceback
 import pickle
-
 from requests import get
 
+# flask imports
 import flask
 import main
 from flask import request
 
 
-USER_ID = 0        # Every user on the local system will have their own ID.
-CONTACT_LIST = []  # [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey, Port#],...]
-MESSAGE_LIST = []  # [[[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...], ...] something like this?
-DB_KEY = None      # key used for encrypting and decrypting entries in the database
-PUBLIC_KEY = None  # Users public key
-PRIVATE_KEY = None # Users private key
+USER_ID = 0            # Every user on the local system will have their own ID.
+CONTACT_LIST = []      # [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey, Port#],...]
+MESSAGE_LIST = []      # [[[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...], ...] something like this?
+DB_KEY = None          # key used for encrypting and decrypting entries in the database
+PUBLIC_KEY = None      # Users public key
+PRIVATE_KEY = None     # Users private key
 DIFFIE_HELLMAN = None  # diffie hellman object. see cryptography.py
+
+# networking constants
+BUFSIZE = 4096
+FORMAT = 'utf-8'  # probably not needed
+SERVER_IP = socket.gethostbyname(socket.gethostname())
+PORT = 5550
+
 
 def initialize_database(db_name: str):
     try:
@@ -49,15 +59,6 @@ def initialize_database(db_name: str):
 DATABASE = initialize_database("Primary") # not sure how the database is going to be handled
 
 
-
-# networking constants
-
-BUFSIZE = 4096
-FORMAT = 'utf-8'  # probably not needed
-SERVER_IP = socket.gethostbyname(socket.gethostname())
-PORT = 5550
-
-
 class Message:
     def __init__(self, user_id, machine_id, flag, message, signature=None, tag=None, nonce=None):
         self.user_ID = user_id  # the user's ID on the user's system
@@ -68,10 +69,12 @@ class Message:
         self.tag = tag  # needed for decrypting the message (should not be encrypted)
         self.nonce = nonce  # needed for decrypting the message (should not be encrypted)
 
+
 def get_user_ip() -> str:
     public_ip = get("http://ipgrab.io").text
     # print("public ip: ", public_ip)
     return public_ip[:(len(public_ip)-1)]
+
 
 # NOTE: TODO need to add port number
 def encode_friend(ip_address, user_id):
@@ -88,6 +91,7 @@ def encode_friend(ip_address, user_id):
     friendcode = friendcode[2:]
     return friendcode
 
+
 # NOTE: TODO need to add port number
 def decode_friend(friendcode):
     friendcode = int(friendcode, 16)
@@ -99,6 +103,7 @@ def decode_friend(friendcode):
     print(ip_address)
     ip_address = '.'.join(map(str, ip_address))
     return machine_id, ip_address
+
 
 # TODO Will need updating with friendcode that takes port
 def create_account(username: str, password: str):
@@ -221,6 +226,7 @@ def login(username, password):
     #  use decipher_message_list()
     return NotImplementedError
 
+
 def add_contact(UserID, Contactname, ip_address, port, public_key=None):
     # I haven't gotten to this yet, but I'm assuming that this will
     # actually need to store a contact in the database rather than
@@ -233,11 +239,13 @@ def add_contact(UserID, Contactname, ip_address, port, public_key=None):
     new_contact = (UserID, c.create_iv(), 0, Contactname, ip_address, port, "placeholder secret key", public_key)
 
     # add contact to CONTACT_LIST
+    #CONTACT_LIST.append(new_contact)
     ContactID = DATABASE.new_contact(new_contact)
 
     print(ContactID)
 
     return True
+
 
 def start_keyexchange(contact):
     # create the initial message
@@ -249,47 +257,57 @@ def start_keyexchange(contact):
 
 # contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
 def receive_message(connection, address):
-    
-    # NETWORK
-    # get the sent message object
-    # TODO: larger messages might require the recieving to be done in a loop
-    msg = connection.recv(BUFSIZE)
-    message = pickle.loads(msg)
-    
-    # Step 1: check if message.contact_ID == USER_ID i.e check if message is intended for the current user
-    #  we may have to send an error message back to the sender
-    if message.contact_ID != USER_ID:
-        print("invalid contact\n")
-        return
-    # Step 2: find contact in CONTACT_LIST based on ip_address and machineID
-    contact = DATABASE.find_contacts(message.contact_ID)
-    # Step 3: process the message
+    """
+    This function handles incoming messages.
 
+    :param connection: python socket object
+    :param address: tuple (ip address of sender, port)
+    :return: bool
+    """
     global DIFFIE_HELLMAN
 
     print("you have received a message from: ", address)
 
+    # NETWORK
+    # get the sent message object
+    # NOTE: larger messages might require the recieving to be done in a loop
+    msg = connection.recv(BUFSIZE)
+    message = pickle.loads(msg)
 
+    # get machineID from message
+    machineID = message.user_ID
+
+    # check if message.contact_ID == USER_ID i.e check if message is intended for the current user
+    # TODO: we may have to send an error message back to the sender
+    if message.contact_ID != USER_ID:
+        print("invalid contact\n")
+        return False
 
     # close the connection
     connection.close()
 
+    # find contact in CONTACT_LIST based on ip_address and machineID
+    index = 0
+    for i in range(len(CONTACT_LIST)):
+        if (CONTACT_LIST[i][4] == address[0]) and (CONTACT_LIST[i][2] == machineID):
+            # found the right contact
+            index = i
+            break
+
+    # process flags
     if message.flag == 'm':
         print("text received!")
-        print(message)
         print(message.message)
 
-    # TODO test this encryption
-    # decrypt message
+        # TODO test this encryption
+        # decrypt message
         # create secret key from contact
         # plaintext = c.decrypt_mssg(message.message, secret_key, message.tag, message.nonce)
-    # encrypt message for the database
+        # encrypt message for the database
         # iv = c.create_iv()
         # ciphertext = c.encrypt_db(plaintext, DB_KEY, iv)
-        # TODO DATABASE: create a new message
-    # database function ready, just need above implementation
-    # DATABASE.new_message(message.user_ID, message.machine_ID, contact, address, PORT, SECRET_KEY, PUBLIC_KEY)
 
+        # TODO DATABASE: create a new message
         # Add the new message to MESSAGE_LIST and update the GUI if appropriate
         return True
 
@@ -298,54 +316,41 @@ def receive_message(connection, address):
         print("flag: a1")
         # flag a1: step 1 of the public key exchange
         public_key = message.message
-        machineID = message.user_ID
 
-        # update contact in CONTACT_LIST with public_key
-        for item in CONTACT_LIST:
-            # find the contact with this ip address 
-            if item[4] == address[0]:
-                # update public key
-                item[6] = public_key
+        # add public_key to contact in CONTACT_LIST
+        CONTACT_LIST[index][6] = public_key
 
-                # create message object
-                new_message = Message(USER_ID, machineID, 'a2', PUBLIC_KEY)
-
-                # NETWORKING: send this message
-                send_message(new_message, item)
+        # NETWORKING: send this message
+        new_message = Message(USER_ID, machineID, 'a2', PUBLIC_KEY)
+        send_message(new_message, CONTACT_LIST[index])
 
         return True
 
     elif message.flag == 'a2':
         print("flag: a2")
         # flag a2: step 2 of the public key exchange
-        machineID = message.user_ID
         public_key = message.message
 
         # add public_key to contact in CONTACT_LIST
-        for item in CONTACT_LIST:
-            # find the contact with this ip address
-            if item[4] == address[0]:
-                # update public key
-                item[6] = public_key
+        CONTACT_LIST[index][6] = public_key
 
-                # initiate diffie hellman key exchange
-                DIFFIE_HELLMAN = c.DiffieHellman()
-                g, p = DIFFIE_HELLMAN.create_gp()
-                value = DIFFIE_HELLMAN.create_value()
-                #print("g: ", g)
-                #print("p: ", p)
-                #print("value: ", value)
-                new_message = Message(USER_ID, machineID, 'b1', (g, p, value))
+        # initiate diffie hellman key exchange
+        DIFFIE_HELLMAN = c.DiffieHellman()
+        g, p = DIFFIE_HELLMAN.create_gp()
+        value = DIFFIE_HELLMAN.create_value()
+        #print("g: ", g)
+        #print("p: ", p)
+        #print("value: ", value)
 
-                # NETWORKING: send this message
-                send_message(new_message, item)
+        # NETWORKING: send this message
+        new_message = Message(USER_ID, machineID, 'b1', (g, p, value))
+        send_message(new_message, CONTACT_LIST[index])
 
         return True
 
     elif message.flag == 'b1':
         print("flag: b1")
         # flag b1: step 1 of the diffie hellman key exchange
-        machineID = message.user_ID
         g, p, value = message.message
         DIFFIE_HELLMAN = c.DiffieHellman(g, p)
         value = DIFFIE_HELLMAN.create_value()
@@ -355,19 +360,15 @@ def receive_message(connection, address):
         key = DIFFIE_HELLMAN.create_key(value)
 
         # add key to contact in CONTACT_LIST - this completes the contact
-        for item in CONTACT_LIST:
-            # find the contact with this ip address
-            if item[4] == address[0]:
-                # update key
-                item[5] = key
+        CONTACT_LIST[index][5] = key
 
-                print(item)
+        #print(CONTACT_LIST[index])
 
-                #TODO DATABASE add new contact
+        #TODO DATABASE add new contact
 
-                # NETWORKING: send this message
-                new_message = Message(USER_ID, machineID, 'b2', value)
-                send_message(new_message, item)
+        # NETWORKING: send this message
+        new_message = Message(USER_ID, machineID, 'b2', value)
+        send_message(new_message, CONTACT_LIST[index])
 
         return True
 
@@ -377,21 +378,18 @@ def receive_message(connection, address):
         key = DIFFIE_HELLMAN.create_key(value)
 
         # add key to contact in CONTACT_LIST - this completes the contact
-        for item in CONTACT_LIST:
-            # find the contact with this ip address
-            if item[4] == address[0]:
-                # update key
-                item[5] = key
+        CONTACT_LIST[index][5] = key
 
-                print(item)
+        #print(CONTACT_LIST[index])
         
-                #TODO DATABASE add new contact
+        #TODO DATABASE add new contact
 
         return True
 
     else:
         print("Message Flag Error")
         return False
+
 
 def create_message(text, contact):
     # get necessary info
@@ -433,6 +431,7 @@ def decipher_message_list(messages):
     # may need to order the messages by their timestamp
     # may also want to remove unnecessary information (UserID, ContactID, IV)
     return messages
+
 
 def start_server():
     """
