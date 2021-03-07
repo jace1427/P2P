@@ -14,7 +14,8 @@ TODO:
     Make 404 better
 """
 import flask
-# from flask import request
+from flask import request
+import main
 
 app = flask.Flask(__name__)
 app.secret_key = bytes(1)
@@ -26,6 +27,15 @@ def login():
 
 @app.route("/registration")
 def registration():
+    return flask.render_template("register.html")
+
+@app.route("/registration_attempt", methods=["POST"])
+def registration_attempt():
+    username = request.form["username-input"]
+    password = request.form["password-input"]
+    app.logger.debug(username)
+    app.logger.debug(password)
+    app.logger.debug(main.create_account(username, password))
     return flask.render_template("register.html")
 
 @app.route("/help")
@@ -47,6 +57,18 @@ def index():
     app.logger.debug("Main page entry")
     return flask.render_template("p2p.html")
 
+# Riley's test function
+@app.route("/messaging_test", methods=['POST'])
+def messaging_test():
+    arguments = request.form
+    # request form should return a dictionary where each value
+    # is indexed by the name of the input from the html
+    # look at line 61 in static/p2p.html, specifically name="text"
+    message = arguments["text"]
+    # printing from flask_p2p.py requires app.logger.debug
+    # (works the same as print)
+    app.logger.debug(message)
+    return flask.render_template("p2p.html")
 
 @app.errorhandler(404)
 def page_not_found(error):
