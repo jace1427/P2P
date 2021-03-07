@@ -257,7 +257,9 @@ class database():
 
         # increment by 1, so the next user will 
         # get a unique id (done by auto increment in UserID)
-        UserID = self.cursor.execute("SELECT Users_UserID FROM users WHERE Username=?",(Username,)).fetchone()[0]
+        UserID = self.cursor.execute("SELECT Users_UserID "
+                                     "FROM users "
+                                     "WHERE Username=?",(Username,)).fetchone()[0]
 
         return UserID
 
@@ -285,10 +287,12 @@ class database():
     def new_contact(self, values : tuple)->int:
 
         # insert the new contact into our contacts table
-        self.insert("contacts",self.CONTACTS_COLUMNS, values
+        self.insert("contacts",self.CONTACTS_COLUMNS, values)
         # this value will be incremented every time it is assigned
         # via AUTOINCREMENT
-        ContactID = self.cursor.execute("SELECT ContactID FROM contacts WHERE IV=?", (values[1],)).fetchall()
+        ContactID = self.cursor.execute("SELECT ContactID "
+                                        "FROM contacts "
+                                        "WHERE IV=?", (values[1],)).fetchall()
 
         # HAVING TROUBLE GETTING CONTACTID
         return ContactID
@@ -317,7 +321,10 @@ class database():
         # commit the changes to the database so we can access them
         self.connection.commit()
 
-        MessageID = self.cursor.execute("SELECT MessageID FROM messages WHERE IV=?", (values[2]),).fetchone()[0]
+        MessageID = self.cursor.execute("SELECT MessageID"
+                                        "FROM messages"
+                                        "WHERE IV=?", 
+                                        (values[2]),).fetchone()[0]
 
         return MessageID
 
@@ -364,7 +371,10 @@ class database():
         list (nested) e.g. [[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...]
     """
     def find_messages(self, UserID, ContactID, n):
-        entries = self.cursor.execute("SELECT * FROM messages WHERE UserID = ?, ContactID = ?", (UserID, ContactID))
+        entries = self.cursor.execute("SELECT * "
+                                      "FROM messages "
+                                      "WHERE UserID = ?, "
+                                      "ContactID = ?", (UserID, ContactID))
 
         return entries[:n]
 
