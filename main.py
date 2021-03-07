@@ -76,7 +76,6 @@ def get_user_ip() -> str:
     return public_ip[:(len(public_ip)-1)]
 
 
-# NOTE: TODO need to add port number
 def encode_friend(ip_address, user_id):
     ip_address = ip_address.split('.')
     ip_address = list(map(int, ip_address))
@@ -92,7 +91,6 @@ def encode_friend(ip_address, user_id):
     return friendcode
 
 
-# NOTE: TODO need to add port number
 def decode_friend(friendcode):
     friendcode = int(friendcode, 16)
     ip_address = []
@@ -227,22 +225,33 @@ def login(username, password):
     return NotImplementedError
 
 
-def add_contact(UserID, Contactname, ip_address, port, public_key=None):
-    # I haven't gotten to this yet, but I'm assuming that this will
-    # actually need to store a contact in the database rather than
-    # updating the global contact list variable.
-    # I may be wrong, but we'll probably need a helper function
-    # for updating the local contact list whenever a new user logs in
-    # and we can leave this to be database insertion
+def add_contact(friendcode, Contactname, port, public_key=None):
+    """
+    Creates a new contact in CONTACT_LIST.
+    This contact won't be added into the database until the key exchange process has been completed
+
+    """
+
+    # get machineID and ip_address from friendcode
+    machine_id, ip_address = decode_friend(friendcode)
+
+    # determine the contactID
+    if len(CONTACT_LIST) == 0:
+        # this means we have no contacts, and this will be the first
+        contactID = 0
+    else:
+        # this means we have contacts, so we grab the contactID of the last contact
+        # in the list and increment that value by 1 to get our new contacts contactID
+        contactID = CONTACT_LIST[-1][0] + 1
+
+    # create iv
+    iv = c.create_iv()
 
     # create new contact
-    new_contact = (UserID, c.create_iv(), 0, Contactname, ip_address, port, "placeholder secret key", public_key)
+    new_contact = [contactID, iv, machine_id, Contactname, ip_address, "temp sk", public_key, port]
 
-    # add contact to CONTACT_LIST
-    #CONTACT_LIST.append(new_contact)
-    ContactID = DATABASE.new_contact(new_contact)
-
-    print(ContactID)
+    # insert new contact into CONTACT_LIST
+    CONTACT_LIST.append(new_contact)
 
     return True
 
@@ -364,7 +373,8 @@ def receive_message(connection, address):
 
         #print(CONTACT_LIST[index])
 
-        #TODO DATABASE add new contact
+        # DATABASE: add new contact to database
+        foo = db.new_contact((USER_ID, CONTACT_LIST[index][1], CONTACT_LIST[index][2], CONTACT_LIST[index][3], CONTACT_LIST[index][4], CONTACT_LIST[index][7], key, CONTACT_LIST[index][6]))
 
         # NETWORKING: send this message
         new_message = Message(USER_ID, machineID, 'b2', value)
@@ -382,7 +392,8 @@ def receive_message(connection, address):
 
         #print(CONTACT_LIST[index])
         
-        #TODO DATABASE add new contact
+        # DATABASE: add new contact to database
+        foo = db.new_contact((USER_ID, CONTACT_LIST[index][1], CONTACT_LIST[index][2], CONTACT_LIST[index][3], CONTACT_LIST[index][4], CONTACT_LIST[index][7], key, CONTACT_LIST[index][6]))
 
         return True
 
