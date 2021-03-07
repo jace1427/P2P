@@ -106,7 +106,6 @@ def create_account(username: str, password: str):
     print("Creating account...")
     # check if username is unique
     unique = DATABASE.find_user(username)
-    DATABASE.close()
 
     if unique:
         # this may have to be reworked to include the flask functionality
@@ -150,7 +149,7 @@ def create_account(username: str, password: str):
                                c.bytes2string(c.bytes2base64(enc_PORT)),
                                c.bytes2string(c.bytes2base64(enc_PublicKey)),
                                c.bytes2string(c.bytes2base64(enc_PrivateKey)))
-    DATABASE.close()
+    #DATABASE.close()
 
     print(f"New user {username} created! "
           f"UserID: {UserID}")
@@ -167,6 +166,7 @@ def login(username, password):
     user_info = DATABASE.find_user(username)
     if user_info:
         user_info = user_info[0]
+        print(user_info)
         print(f"User {user_info[1]} found!")
         PasswordHash = c.base642bytes(c.string2bytes(user_info[2]))
     else:
@@ -203,8 +203,11 @@ def login(username, password):
     PRIVATE_KEY = c.decrypt_db(PrivateKey, DB_KEY, User_IV)
 
     # Step 3: Create Contact List
-    #TODO DATABASE: return all contacts of a specific User as a nested list (You'll need to JOIN USERS and CONTACTS)
-
+    # DATABASE: return all contacts of a specific User as a nested list (You'll need to JOIN USERS and CONTACTS)
+    CONTACT_LIST = DATABASE.find_contacts(USER_ID)
+    
+    # list of messages
+    messages=[]
     # this should decrypt the necessary values returned by the database
     for contact in CONTACT_LIST:
         i = 2
@@ -213,10 +216,12 @@ def login(username, password):
     # Step 4: Pull most recent messages of each user
     # TODO DATABASE: create a function that returns the n most recent messages between a user and a contact
     # loop through the contact list and run the database function to pull the appropriate messages from the database
+
+        messages.append(DATABASE.find_messages(USER_ID, contact, 2))
     #  use decipher_message_list()
     return NotImplementedError
 
-def add_contact(ip_address, port, Contactname, public_key=None):
+def add_contact(UserID, Contactname, ip_address, port, public_key=None):
     # I haven't gotten to this yet, but I'm assuming that this will
     # actually need to store a contact in the database rather than
     # updating the global contact list variable.
@@ -224,29 +229,13 @@ def add_contact(ip_address, port, Contactname, public_key=None):
     # for updating the local contact list whenever a new user logs in
     # and we can leave this to be database insertion
 
-    new_contact = []
-
-    # Create a contactID
-    if len(CONTACT_LIST) == 0:
-        # first contact
-        ContactID = 1
-    else:
-        ContactID = CONTACT_LIST[-1][0] + 1
-
     # create new contact
-    new_contact.append(ContactID)
-    new_contact.append(c.create_iv())
-    new_contact.append(0)
-    new_contact.append(Contactname)
-    new_contact.append(ip_address)
-    new_contact.append("placeholder secret key")
-    new_contact.append(public_key)
-    new_contact.append(port)
+    new_contact = (UserID, c.create_iv(), 0, Contactname, ip_address, port, "placeholder secret key", public_key)
 
     # add contact to CONTACT_LIST
-    CONTACT_LIST.append(new_contact)
+    ContactID = DATABASE.new_contact(new_contact)
 
-    #print(CONTACT_LIST)
+    print(ContactID)
 
     return True
 
@@ -260,20 +249,27 @@ def start_keyexchange(contact):
 
 # contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
 def receive_message(connection, address):
+    
+    # NETWORK
+    # get the sent message object
+    # TODO: larger messages might require the recieving to be done in a loop
+    msg = connection.recv(BUFSIZE)
+    message = pickle.loads(msg)
+    
     # Step 1: check if message.contact_ID == USER_ID i.e check if message is intended for the current user
     #  we may have to send an error message back to the sender
+    if message.contact_ID != USER_ID:
+        print("invalid contact\n")
+        return
     # Step 2: find contact in CONTACT_LIST based on ip_address and machineID
+    contact = DATABASE.find_contacts(message.contact_ID)
     # Step 3: process the message
 
     global DIFFIE_HELLMAN
 
     print("you have received a message from: ", address)
 
-    # NETWORK
-    # get the sent message object
-    # TODO: larger messages might require the recieving to be done in a loop
-    msg = connection.recv(BUFSIZE)
-    message = pickle.loads(msg)
+
 
     # close the connection
     connection.close()
@@ -291,6 +287,8 @@ def receive_message(connection, address):
         # iv = c.create_iv()
         # ciphertext = c.encrypt_db(plaintext, DB_KEY, iv)
         # TODO DATABASE: create a new message
+    # database function ready, just need above implementation
+    # DATABASE.new_message(message.user_ID, message.machine_ID, contact, address, PORT, SECRET_KEY, PUBLIC_KEY)
 
         # Add the new message to MESSAGE_LIST and update the GUI if appropriate
         return True

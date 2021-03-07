@@ -17,6 +17,7 @@
 #############
 
 import sqlite3
+import csv
 
 """
     Database class creates an sql database object that we 
@@ -40,17 +41,17 @@ class database():
         # allows us to insert inside the database
         self.cursor = self.connection.cursor()
 
-        # The below ints increment the ContactID, UserID, and message_id keys respectively. 
-        # Starting from zero, each time an id is assigned, the counter increments
-        self.contact_counter = 0
-        self.user_counter = 0
-        self.message_counter = 0
-
         # This is used whenever we need to call insert(),
         # it will be used to specify which columns to update
-        self.USER_COLUMNS = ("UserID", "Username", "PasswordHash", "IV", "IP_address", "Port", "PublicKey", "PrivateKey")
-        #TODO: We'll also need a self.CONTACTS_COLUMNS and self.MESSAGES_COLUMNS
 
+        # These below  columns do not contain UserID, ContactID, and MessageID respectively since those
+        # values are handled by the AUTOINCREMENT feature in each of them
+        self.USER_COLUMNS = ("Username", "PasswordHash", "IV", "IP_address", "Port", "PublicKey", "PrivateKey")
+        self.CONTACTS_COLUMNS = ("Users_UserID", "IV", "MachineID", "ContactName", "IP_address", "Port", "SecretKey", "PublicKey")
+        self.MESSAGES_COLUMNS = ("CONTACTS_USER_UserID", "CONTACTS_ContactID", "IV", "Text", "Timestamp", "Sent")
+
+        # USER_COLUMNS with UserID added
+        self.user_columns = ("UserID", "Username", "PasswordHash", "IV", "IP_address", "Port", "PublicKey", "PrivateKey")
 
         # Note : in this program, varchar is used to store both strings and
         # what the rest of the program will regard as python bytestrings
@@ -71,7 +72,9 @@ class database():
     def create_users(self):
 
         # create users table
-        self.cursor.execute("CREATE TABLE users (UserID INT, Username VARCHAR(45), PasswordHash VARCHAR(45), IV VARCHAR(45), IP_address VARCHAR(45), Port INT, PublicKey VARCHAR(2000), PrivateKey VARCHAR(2000))")
+        self.cursor.execute("CREATE TABLE users (UserID INTEGER PRIMARY KEY, Username VARCHAR(45), PasswordHash VARCHAR(45), IV VARCHAR(45), IP_address VARCHAR(45), Port INT, PublicKey VARCHAR(2000), PrivateKey VARCHAR(2000))")
+
+        self.connection.commit()
 
         return
 
@@ -87,8 +90,9 @@ class database():
     def create_contacts(self):
         
         # create contacts table
-        self.cursor.execute("CREATE TABLE contacts (USERS_UserID INT, ContactID INT, IV VARCHAR(45), MachineID INT, ContactName VARCHAR(45), IP_address VARCHAR(45), Port INT, SecretKey VARCHAR(2000), PublicKey VARCHAR(2000))")
+        self.cursor.execute("CREATE TABLE contacts (USERS_UserID INT, ContactID INTEGER PRIMARY KEY, IV VARCHAR(45), MachineID INT, ContactName VARCHAR(45), IP_address VARCHAR(45), Port INT, SecretKey VARCHAR(2000), PublicKey VARCHAR(2000))")
         
+        self.connection.commit()
         return
 
     """
@@ -103,7 +107,9 @@ class database():
     def create_messages(self):
         
         # creates messages table
-        self.cursor.execute("CREATE TABLE messages (CONTACTS_USER_UserID INT, CONTACTS_ContactID INT, MessageID INT, IV VARCHAR(45), Text VARCHAR(255), Timestamp DATETIME, Sent INT)")
+        self.cursor.execute("CREATE TABLE messages (CONTACTS_USER_UserID INT, CONTACTS_ContactID INT, MessageID INTEGER PRIMARY KEY, IV VARCHAR(45), Text VARCHAR(255), Timestamp DATETIME, Sent INT)")
+
+        self.connection.commit()
 
         return 
 
@@ -167,31 +173,6 @@ class database():
         return
 
     """
-    stores a message in the users messages log
-    POSSIBLY OUTDATED
-
-
-    Parameters
-        user : users contact_id
-        contact_id : contact's contact_id
-        iv : initialization vector for decryption
-        message : message sent between the parties
-        timestamp : time the message was sent
-        sent : determines whether message is sent by or delivered to user
-    Returns
-        None
-    """
-    """    def store_message(self, user : int, contact_id : int, iv : str, message : str, timestamp : datetime, sent : int)-> None:
-            
-            # stores message to messages database
-            self.cursor.execute(f"INSERT INTO messages VALUES ({user}, {contact_id}, {self.message_id}, {iv}, {message}, {timestamp}, {sent})")
-            
-            # increment self.message_id
-            self.message_id = self.message_id + 1
-    
-            return
-    """
-    """
     returns the users list of contacts
 
     Parameters
@@ -203,8 +184,10 @@ class database():
         
         return self.cursor.execute("SELECT * "
                                    "FROM contacts "
-                                   "UserID=?",
+                                   "WHERE Users_UserID=?",
                                    (UserID,)).fetchall()
+
+                                   
     
     """
     loads a table to a csv file in the current directory
@@ -263,17 +246,18 @@ class database():
                  PublicKey : str, PrivateKey: str)->int:
 
         # set id equal to current counter value
-        UserID = self.user_counter
+        #UserID = self.user_counter
 
         # insert the new user into our users table
-        self.insert("users", self.USER_COLUMNS, (str(UserID), Username,
+        self.insert("users", self.USER_COLUMNS, (Username,
                                                  PasswordHash, IV,
                                                  IP_address, Port,
                                                  PublicKey, PrivateKey))
 
+
         # increment by 1, so the next user will 
-        # get a unique id
-        self.user_counter = self.user_counter + 1
+        # get a unique id (done by auto increment in UserID)
+        UserID = self.cursor.execute("SELECT Users_UserID FROM users WHERE Username=?",(Username,)).fetchone()[0]
 
         return UserID
 
@@ -282,34 +266,31 @@ class database():
         Note: the first contact should have ContactID=0 and each subsequent contact's ContactID should be incremented by 1
         
         Parameters:
-            UserID : users id
-            IV : initialization vector for decryption
-            MachineID : user's machine id
-            Contactname : contact's name
-            IP_address : user's ip address
-            Port : port contact commmunicates on
-            SecretKey : encryption key
-            PublicKey : encryption key
+            values = [
+                UserID : users id,
+                IV : initialization vector for decryption,
+                MachineID : user's machine id,
+                Contactname : contact's name,
+                IP_address : user's ip address,
+                Port : port contact commmunicates on,
+                SecretKey : encryption key,
+                PublicKey : encryption key ]
         Return:
             newly created contacts id
-    """
-    def new_contact(self, UserID : int, IV : str, MachineID : int,
+    
+    values = [UserID : int, IV : str, MachineID : int,
                     Contactname : str, IP_address : str, Port : int,
-                    SecretKey: str, PublicKey: str)->int:
-
-        
-        # set id equal to current counter value
-        ContactID = self.contact_counter
+                    SecretKey: str, PublicKey: str]
+    """
+    def new_contact(self, values : tuple)->int:
 
         # insert the new contact into our contacts table
-        self.insert("contacts", [UserID, ContactID, IV, MachineID,
-                                 Contactname, IP_address, Port,
-                                 SecretKey, PublicKey])
+        self.insert("contacts",self.CONTACTS_COLUMNS, values
+        # this value will be incremented every time it is assigned
+        # via AUTOINCREMENT
+        ContactID = self.cursor.execute("SELECT ContactID FROM contacts WHERE IV=?", (values[1],)).fetchall()
 
-        # increment by 1, so the next contact will 
-        # get a unique id
-        self.contact_counter = self.contact_counter + 1
-
+        # HAVING TROUBLE GETTING CONTACTID
         return ContactID
 
     
@@ -330,15 +311,13 @@ class database():
     def new_message(self, UserID : int, ContactID : int,
                     IV : str, Text : str, Sent : int)-> int:
 
-        # set id equal to current counter value
-        MessageID = self.message_counter
-
         # insert the new message into our messages table
-        self.insert("messages", [UserID, ContactID, MessageID, IV, Text, Sent])
+        self.insert("messages", [UserID, ContactID, IV, Text, Sent])
 
-        # increment by 1, so the next message will 
-        # get a unique id
-        self.message_counter = self.message_counter + 1
+        # commit the changes to the database so we can access them
+        self.connection.commit()
+
+        MessageID = self.cursor.execute("SELECT MessageID FROM messages WHERE IV=?", (values[2]),).fetchone()[0]
 
         return MessageID
 
@@ -354,7 +333,7 @@ class database():
     def find_user(self, username : str)-> list:
         # username = f'{username}'
         # print("SELECT {0} FROM users WHERE Username = '{1}'".format(self.USER_COLUMNS, username))
-        user_columns = ", ".join(self.USER_COLUMNS)
+        user_columns = ", ".join(self.user_columns)
         # print(user_columns)
 
         # THIS IS QUESTIONABLE (apparently susceptible to SQL injection)
