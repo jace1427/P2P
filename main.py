@@ -76,15 +76,16 @@ def get_user_ip() -> str:
     return public_ip[:(len(public_ip)-1)]
 
 
-def encode_friend(ip_address, user_id):
+def encode_friend(ip_address, user_id, port):
     ip_address = ip_address.split('.')
     ip_address = list(map(int, ip_address))
-    a = 8
+    a = 24
     friendcode = []
     for i in ip_address:
         friendcode.append(i << a)
         a += 8
     friendcode = sum(friendcode)
+    friendcode += (port << 8)
     friendcode += user_id
     friendcode = hex(friendcode)
     friendcode = friendcode[2:]
@@ -98,9 +99,10 @@ def decode_friend(friendcode):
         ip_address.append(friendcode & 255)
         friendcode = friendcode >> 8
     machine_id = ip_address.pop(0)
-    print(ip_address)
+    port = ip_address.pop(0)
+    port += ip_address.pop(0) << 8
     ip_address = '.'.join(map(str, ip_address))
-    return machine_id, ip_address
+    return machine_id, ip_address, port
 
 
 # TODO Will need updating with friendcode that takes port
@@ -225,15 +227,15 @@ def login(username, password):
     return NotImplementedError
 
 
-def add_contact(friendcode, Contactname, port, public_key=None):
+def add_contact(Contactname, friendcode, public_key=None):
     """
     Creates a new contact in CONTACT_LIST.
     This contact won't be added into the database until the key exchange process has been completed
 
     """
 
-    # get machineID and ip_address from friendcode
-    machine_id, ip_address = decode_friend(friendcode)
+    # get machineID, port and ip_address from friendcode
+    machine_id, ip_address, port = decode_friend(friendcode)
 
     # determine the contactID
     if len(CONTACT_LIST) == 0:
