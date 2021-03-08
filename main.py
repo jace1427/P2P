@@ -110,15 +110,18 @@ def decode_friend(friendcode):
 def create_account(username: str, password: str):
 
     print("Creating account...")
-    # check if username is unique
-    unique = DATABASE.find_user(username)
 
-    if unique:
+    if not username or not password:
+        return -1
+    elif "'" in username or "'" in password:
+        return -2
+    # check if username is unique
+    elif DATABASE.find_user(username.lower()):
         # this may have to be reworked to include the flask functionality
         # of displaying a specific page or error message upon receiving
         # an invalid/in-use username
         print("User already exists")
-        return None
+        return -3
 
     # (optional) check if password is secure (just check length?)
     # TODO IF WE HAVE TIME
@@ -162,23 +165,30 @@ def create_account(username: str, password: str):
 
     # global variables will need to be set in login, but this may change
     # when we figure out how to make flask and sql play nice
-    return True
+    return 0
 
 
 # contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
 def login(username, password):
 
+    if not username or not password:
+        print("Username and password cannot be blank")
+        return -1
+    elif "'" in username or "'" in password:
+        print("Username and password cannot contain '")
+        return -2
+
     # Step 0: find if user with given username exists in the system
-    user_info = DATABASE.find_user(username)
+    user_info = DATABASE.find_user(username.lower())
     if user_info:
         user_info = user_info[0]
-        print(user_info)
+        # print(user_info)
         print(f"User {user_info[1]} found!")
         PasswordHash = c.base642bytes(c.string2bytes(user_info[2]))
     else:
         # database will return empty list if user not found
         print("User not found")
-        return None
+        return -3
 
     global DB_KEY
     # Step 1: Authenticate User
@@ -209,24 +219,38 @@ def login(username, password):
     PUBLIC_KEY = c.decrypt_db(PublicKey, DB_KEY, User_IV)
     PRIVATE_KEY = c.decrypt_db(PrivateKey, DB_KEY, User_IV)
 
-    # Step 3: Create Contact List
-    # DATABASE: return all contacts of a specific User as a nested list (You'll need to JOIN USERS and CONTACTS)
-    CONTACT_LIST = DATABASE.find_contacts(USER_ID)
-    
-    # list of messages
-    messages=[]
-    # this should decrypt the necessary values returned by the database
-    for contact in CONTACT_LIST:
-        i = 2
-        while i != 5:
-            contact[i] = c.decrypt_db(contact[i], DB_KEY, contact[1])
-    # Step 4: Pull most recent messages of each user
-    # TODO DATABASE: create a function that returns the n most recent messages between a user and a contact
-    # loop through the contact list and run the database function to pull the appropriate messages from the database
+    # Step 3: Populate Contact List global variable
+    _populate_contact_list(USER_ID)
 
-        messages.append(DATABASE.find_messages(USER_ID, contact, 2))
-    #  use decipher_message_list()
-    return NotImplementedError
+    return 0
+
+
+def _populate_contact_list(UserID: int) -> None:
+    """
+    _populate_contact_list
+        Helper function for querying the sql database for contacts
+        to populate the global variabel CONTACT_LIST
+
+    :param
+        UserID: The current user's ID to differentiate
+                between contacts in the database
+    :return
+        None
+    """
+    temp_contact_list = DATABASE.find_contacts(UserID)
+    for contact in temp_contact_list:
+        new_contact = []
+        new_contact.append(contact[1])
+        new_contact.append(contact[2])
+        new_contact.append(contact[3])
+        new_contact.append(contact[4])
+        new_contact.append(contact[5])
+        new_contact.append(contact[7])
+        new_contact.append(contact[8])
+        new_contact.append(contact[6])
+        CONTACT_LIST.append(new_contact)
+
+    return
 
 
 def add_contact(Contactname, friendcode, public_key=None):

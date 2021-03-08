@@ -38,7 +38,18 @@
                 <div class="login_label">
                     <label>Log In</label>
                 </div>
-                <form action="/index" method="POST">
+                <form action="/login_attempt" method="POST">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <ul class=flashes>
+                            {% for message in messages %}
+                                <p style="color:#FF0000;
+                                font-family: Arial, sans-serif;
+                                font-size:16px" class="{{ category }}">{{ message }}</p>
+                            {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endwith %}
                     <input type="username" name="username-input" class="textbox username_box" placeholder="Username"/>
                     <input type="password" name="password-input" class="textbox password_box" placeholder="Password"/>
                     <div>

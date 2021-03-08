@@ -25,6 +25,24 @@ app.secret_key = bytes(1)
 def login():
     return flask.render_template("login.html")
 
+@app.route("/login_attempt", methods=["POST"])
+def login_attempt():
+    username = request.form["username-input"]
+    password = request.form["password-input"]
+    app.logger.debug(username)
+    app.logger.debug(password)
+    result = main.login(username, password)
+    if result == 0:
+        return flask.redirect("/index")
+    elif result == -1:
+        flask.flash(u"ERROR: Username or password cannot be blank")
+    elif result == -2:
+        flask.flash(u"ERROR: Invalid username or password")
+        flask.flash(u"Usernames and passwords may contain any character except '")
+    else:
+        flask.flash(u"ERROR: User not found")
+    return flask.redirect("/login")
+
 @app.route("/registration")
 def registration():
     return flask.render_template("register.html")
@@ -35,8 +53,17 @@ def registration_attempt():
     password = request.form["password-input"]
     app.logger.debug(username)
     app.logger.debug(password)
-    app.logger.debug(main.create_account(username, password))
-    return flask.render_template("register.html")
+    result = main.create_account(username, password)
+    if result == 0:
+        return flask.redirect("/login")
+    elif result == -1:
+        flask.flash(u"ERROR: Username or password cannot be blank")
+    elif result == -2:
+        flask.flash(u"ERROR: Invalid username or password")
+        flask.flash(u"Usernames and passwords may contain any character except '")
+    else:
+        flask.flash(u"ERROR: User already exists")
+    return flask.redirect("/registration")
 
 @app.route("/help")
 def help_page():
@@ -51,7 +78,7 @@ def contact_us():
     return flask.render_template("contactus.html")
 
 # @app.route("/")
-@app.route("/index", methods=['POST'])
+@app.route("/index")
 def index():
     app.logger.debug(request.form)
     app.logger.debug("Main page entry")
