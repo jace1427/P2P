@@ -70,10 +70,12 @@ body {
                 </div>
                 <nav>
                     <ul>
-                        {% for row in range(20) %}
+                        {% for i in range(contact_length) %}
                             <li>
-                                Name
-                                <input class="message_contact" type="submit" name="{{row}}" value="Message" />
+                                <form action="/_message_contact" method="POST">
+                                    {{ contacts[i][0] }}
+                                    <input class="message_contact" id="message_contact" type="submit" name="{{ contacts[i][1] }}" value="Message" />
+                                </form>
                             </li>
                         {% endfor %}
                     </ul>
@@ -82,17 +84,16 @@ body {
                 <div class="add_contact_label">
                     <label>Add Contact</label>
                 </div>
-                <br />
                 <div class="add_contact_form">
-                    <form>
+                    <form action="/_add_contact" method="POST">
                         <div class="add_contact_form_labels">
                             <label>Name:</label>
                         </div>
-                        <input name="IP" class="add_contact_fields" placeholder="Name" />
+                        <input name="name" class="add_contact_fields" placeholder="Name" />
                         <div class="add_contact_form_labels">
-                            <label>IPV4 Address:</label>
+                            <label>FriendCode:</label>
                         </div>
-                        <input name="name" class="add_contact_fields"placeholder="0.0.0.0" />
+                        <input name="friendcode" class="add_contact_fields"placeholder="000-0000-000-0000" />
                         <input type="submit" class="add_contact" value="Add Contact" />
                     </form>
                 </div>

@@ -20,10 +20,12 @@ import main
 app = flask.Flask(__name__)
 app.secret_key = bytes(1)
 
+
 @app.route("/")
 @app.route("/login")
 def login():
     return flask.render_template("login.html")
+
 
 @app.route("/login_attempt", methods=["POST"])
 def login_attempt():
@@ -38,14 +40,17 @@ def login_attempt():
         flask.flash(u"ERROR: Username or password cannot be blank")
     elif result == -2:
         flask.flash(u"ERROR: Invalid username or password")
-        flask.flash(u"Usernames and passwords may contain any character except '")
+        flask.flash(
+            u"Usernames and passwords may contain any character except '")
     else:
         flask.flash(u"ERROR: User not found")
     return flask.redirect("/login")
 
+
 @app.route("/registration")
 def registration():
     return flask.render_template("register.html")
+
 
 @app.route("/registration_attempt", methods=["POST"])
 def registration_attempt():
@@ -60,42 +65,53 @@ def registration_attempt():
         flask.flash(u"ERROR: Username or password cannot be blank")
     elif result == -2:
         flask.flash(u"ERROR: Invalid username or password")
-        flask.flash(u"Usernames and passwords may contain any character except '")
+        flask.flash(
+            u"Usernames and passwords may contain any character except '")
     else:
         flask.flash(u"ERROR: User already exists")
     return flask.redirect("/registration")
+
 
 @app.route("/help")
 def help_page():
     return flask.render_template("help.html")
 
+
 @app.route("/about")
 def about_page():
     return flask.render_template("about.html")
+
 
 @app.route("/contactus")
 def contact_us():
     return flask.render_template("contactus.html")
 
-# @app.route("/")
+
 @app.route("/index")
 def index():
-    app.logger.debug(request.form)
     app.logger.debug("Main page entry")
-    return flask.render_template("p2p.html")
+    contacts = get_contacts()
+    return flask.render_template("p2p.html", contacts=contacts,
+                                 contact_length=len(contacts))
 
-# Riley's test function
-@app.route("/messaging_test", methods=['POST'])
-def messaging_test():
-    arguments = request.form
-    # request form should return a dictionary where each value
-    # is indexed by the name of the input from the html
-    # look at line 61 in static/p2p.html, specifically name="text"
-    message = arguments["text"]
-    # printing from flask_p2p.py requires app.logger.debug
-    # (works the same as print)
-    app.logger.debug(message)
-    return flask.render_template("p2p.html")
+
+@app.route("/_add_contact", methods=['POST'])
+def _add_contact():
+    app.logger.debug("Add contact request")
+    app.logger.debug(request.form)
+    contacts = get_contacts()
+    return flask.render_template("p2p.html", contacts=contacts,
+                                 contact_length=len(contacts))
+
+
+@app.route("/_message_contact", methods=['POST'])
+def _message_contact():
+    app.logger.debug("Message contact")
+    app.logger.debug(request.form)
+    contacts = get_contacts()
+    return flask.render_template("p2p.html", contacts=contacts,
+                                 contact_length=len(contacts))
+
 
 @app.errorhandler(404)
 def page_not_found(error):
@@ -104,14 +120,11 @@ def page_not_found(error):
     return flask.render_template('404.html'), 404
 
 
-@app.route("/send", methods=['POST'])
-def send():
-    app.logger.debug(request.form)
-    flask.flash(u"ERROR: Please submit a distance", "error")
-    return flask.render_template('404.html'), 404
+def get_contacts():
+    return [(i[3], i[2]) for i in main.CONTACT_LIST]
 
 
 if __name__ == '__main__':
     PORT = 5000
     print(f"Opening for global access on port {PORT}")
-    app.run(port=PORT, host="0.0.0.0", debug=True)
+    app.run(port=PORT, host="0.0.0.0", debug=True, threaded=False)
