@@ -74,7 +74,8 @@ body {
                             <li>
                                 <form action="/_message_contact" method="POST">
                                     {{ contacts[i][0] }}
-                                    <input class="message_contact" id="message_contact" type="submit" name="{{ contacts[i][1] }}" value="Message" />
+                                    <input class="message_contact" id="message_contact" type="submit" value="Message" />
+                                    <input type="hidden" name="ind" value="{{ contacts[i][1] }}">
                                 </form>
                             </li>
                         {% endfor %}
@@ -93,7 +94,7 @@ body {
                         <div class="add_contact_form_labels">
                             <label>FriendCode:</label>
                         </div>
-                        <input name="friendcode" class="add_contact_fields"placeholder="000-0000-000-0000" />
+                        <input name="friendcode" class="add_contact_fields"placeholder="00000000000000" />
                         <input type="submit" class="add_contact" value="Add Contact" />
                     </form>
                 </div>

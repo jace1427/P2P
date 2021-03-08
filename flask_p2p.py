@@ -31,8 +31,6 @@ def login():
 def login_attempt():
     username = request.form["username-input"]
     password = request.form["password-input"]
-    app.logger.debug(username)
-    app.logger.debug(password)
     result = main.login(username, password)
     if result == 0:
         return flask.redirect("/index")
@@ -56,8 +54,6 @@ def registration():
 def registration_attempt():
     username = request.form["username-input"]
     password = request.form["password-input"]
-    app.logger.debug(username)
-    app.logger.debug(password)
     result = main.create_account(username, password)
     if result == 0:
         return flask.redirect("/login")
@@ -98,7 +94,9 @@ def index():
 @app.route("/_add_contact", methods=['POST'])
 def _add_contact():
     app.logger.debug("Add contact request")
-    app.logger.debug(request.form)
+    friendcode = request.form['friendcode']
+    name = request.form['name']
+    main.add_contact(name, friendcode)
     contacts = get_contacts()
     return flask.render_template("p2p.html", contacts=contacts,
                                  contact_length=len(contacts))
@@ -106,8 +104,9 @@ def _add_contact():
 
 @app.route("/_message_contact", methods=['POST'])
 def _message_contact():
-    app.logger.debug("Message contact")
-    app.logger.debug(request.form)
+    contact_id = request.form["ind"]
+    app.logger.debug(f"Messaging contact: {contact_id}")
+
     contacts = get_contacts()
     return flask.render_template("p2p.html", contacts=contacts,
                                  contact_length=len(contacts))
@@ -121,7 +120,7 @@ def page_not_found(error):
 
 
 def get_contacts():
-    return [(i[3], i[2]) for i in main.CONTACT_LIST]
+    return [(i[3], i[0]) for i in main.CONTACT_LIST]
 
 
 if __name__ == '__main__':

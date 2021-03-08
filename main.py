@@ -27,7 +27,7 @@ from flask import request
 
 USER_ID = 0            # Every user on the local system will have their own ID.
 CONTACT_LIST = []      # [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey, Port#],...]
-MESSAGE_LIST = []      # [[[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...], ...] something like this?
+MESSAGE_LIST = []      # [[[UserID, contactID, MessageID, IV, Text, Timestamp, Sent],...], ...] something like this?
 USER_IV = None         # the IV created for the user when they made their account. Used for db encryption
 DB_KEY = None          # key used for encrypting and decrypting entries in the database
 PUBLIC_KEY = None      # Users public key
@@ -257,7 +257,7 @@ def add_contact(Contactname, friendcode, public_key=None):
     """
     Creates a new contact in CONTACT_LIST.
     Also adds new contact into database.
-    
+
     :param
         Contactname: name of contact. type: str
         friendcode: contacts friendcode. type: str
@@ -280,13 +280,23 @@ def add_contact(Contactname, friendcode, public_key=None):
     # insert new contact into CONTACT_LIST
     CONTACT_LIST.append(new_contact)
 
+    public_key = "temp pk"
+
+    # Convert to bytes
+    machine_id = c.string2bytes(str(machine_id))
+    Contactname = c.string2bytes(str(Contactname))
+    ip_address = c.string2bytes(str(ip_address))
+    port = c.string2bytes(str(port))
+    public_key = c.string2bytes(str(public_key))
+    sk = c.string2bytes("temp sk")
+
     # encrypt senstitive information
     enc_machine_id  = c.encrypt_db(machine_id, DB_KEY, USER_IV)
     enc_Contactname = c.encrypt_db(Contactname, DB_KEY, USER_IV)
     enc_ip_address  = c.encrypt_db(ip_address, DB_KEY, USER_IV)
     enc_port        = c.encrypt_db(port, DB_KEY, USER_IV)
     enc_public_key  = c.encrypt_db(public_key, DB_KEY, USER_IV)
-    enc_secret_key  = c.encrypt_db("temp sk", DB_KEY, USER_IV)
+    enc_secret_key  = c.encrypt_db(sk, DB_KEY, USER_IV)
 
     # create new contact to be added to database
     new_contact_db = (USER_ID,
@@ -299,7 +309,7 @@ def add_contact(Contactname, friendcode, public_key=None):
                      c.bytes2string(c.bytes2base64(enc_secret_key)))
 
     # add contact to database
-    cid = DATABASE.new_contact(new_contact_db)
+    cid = DATABASE.new_contact(new_contact_db)[0][0]
 
     # set contactID of new contact to the correct value
     CONTACT_LIST[-1][0] = cid
