@@ -330,21 +330,35 @@ def receive_message(connection, address):
             index = i
             break
 
+
     # process flags
     if message.flag == 'm':
-        print("text received!")
-        print(message.message)
-
+        print("flag: m, text received!")
+        #print(message.message)
         # TODO test this encryption
-        # decrypt message
-        # create secret key from contact
-        # plaintext = c.decrypt_mssg(message.message, secret_key, message.tag, message.nonce)
-        # encrypt message for the database
-        # iv = c.create_iv()
-        # ciphertext = c.encrypt_db(plaintext, DB_KEY, iv)
 
-        # TODO DATABASE: create a new message
+        # create secret key from contact
+        secret_key = CONTACT_LIST[index][5]
+
+        # decrypt message
+        plaintext = c.decrypt_mssg(message.message, secret_key, message.tag, message.nonce)
+
+        # encrypt sensitive information for the database
+        ciphertext = c.encrypt_db(plaintext, DB_KEY, USER_IV)
+        enc_sent   = c.encrypt_db(0, DB_KEY, USER_IV)
+
+        # add message to database
+        MessageID = DATABASE.new_message(USER_ID,
+                                        CONTACT_LIST[index][0],
+                                        USER_IV,
+                                        ciphertext,
+                                        enc_sent)
+
         # Add the new message to MESSAGE_LIST and update the GUI if appropriate
+        new_message = [USER_ID, CONTACT_LIST[index][0], MessageID, USER_IV, plaintext, "timestamp", 0]
+
+        MESSAGE_LIST.append(new_message)
+
         return True
 
     # Below are automatic key exchange protocol messages. These messages should not be kept in the database
