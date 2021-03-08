@@ -185,6 +185,10 @@ def login(username, password):
         # print(user_info)
         print(f"User {user_info[1]} found!")
         PasswordHash = c.base642bytes(c.string2bytes(user_info[2]))
+        if CONTACT_LIST:
+            CONTACT_LIST.clear()
+        if MESSAGE_LIST:
+            MESSAGE_LIST.clear()
     else:
         # database will return empty list if user not found
         print("User not found")
@@ -240,16 +244,15 @@ def _populate_contact_list(UserID: int) -> None:
     temp_contact_list = DATABASE.find_contacts(UserID)
     for contact in temp_contact_list:
         new_contact = []
-        new_contact.append(contact[1])
-        new_contact.append(contact[2])
-        new_contact.append(contact[3])
-        new_contact.append(contact[4])
-        new_contact.append(contact[5])
-        new_contact.append(contact[7])
-        new_contact.append(contact[8])
-        new_contact.append(contact[6])
+        new_contact.append(contact[1])  #contactID no decrypt
+        new_contact.append(c.base642bytes(c.string2bytes(contact[2])))  #IV no decrypt
+        new_contact.append(int(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[3])), DB_KEY, USER_IV))))  #MachineID
+        new_contact.append(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[4])), DB_KEY, USER_IV)))    #contact name
+        new_contact.append(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[5])), DB_KEY, USER_IV)))    #ip address
+        new_contact.append(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[7])), DB_KEY, USER_IV)))    #secret key
+        new_contact.append(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[8])), DB_KEY, USER_IV)))    #public key
+        new_contact.append(int(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[6])), DB_KEY, USER_IV))))    #port
         CONTACT_LIST.append(new_contact)
-
     return
 
 
@@ -300,7 +303,7 @@ def add_contact(Contactname, friendcode, public_key=None):
 
     # create new contact to be added to database
     new_contact_db = (USER_ID,
-                     iv,
+                     c.bytes2string(c.bytes2base64(iv)),
                      c.bytes2string(c.bytes2base64(enc_machine_id)),
                      c.bytes2string(c.bytes2base64(enc_Contactname)),
                      c.bytes2string(c.bytes2base64(enc_ip_address)),
