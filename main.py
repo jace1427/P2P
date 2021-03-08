@@ -151,7 +151,7 @@ def create_account(username: str, password: str):
     # anything which is initially stored as bytes must be encoded
     # as a base64 byte string and converted to a python string before
     # being added to the database
-    UserID = DATABASE.new_user(username,
+    UserID = DATABASE.new_user(username.lower(),
                                c.bytes2string(c.bytes2base64(PasswordHash)),
                                c.bytes2string(c.bytes2base64(User_IV)),
                                c.bytes2string(c.bytes2base64(enc_IP_address)),
@@ -172,10 +172,10 @@ def create_account(username: str, password: str):
 def login(username, password):
 
     if not username or not password:
-        print("Username and password cannot be blank")
+        # print("Username and password cannot be blank")
         return -1
     elif "'" in username or "'" in password:
-        print("Username and password cannot contain '")
+        # print("Username and password cannot contain '")
         return -2
 
     # Step 0: find if user with given username exists in the system
@@ -199,8 +199,8 @@ def login(username, password):
     password_hash = c.pwd2hash(c.string2bytes(password))
 
     # Step 1a: check if password's hash matches stored hash
-    print(password_hash)
-    print(PasswordHash)
+    # print(password_hash)
+    # print(PasswordHash)
     if (password_hash == PasswordHash):
         print("Password was correct!")
         # if the correct password is entered
