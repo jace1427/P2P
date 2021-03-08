@@ -36,7 +36,7 @@ class database():
     def __init__(self, name : str) -> None:
         
         # connects to (or creates, if the database doesn't exist) database
-        self.connection  = sqlite3.connect(name)
+        self.connection  = sqlite3.connect(name, check_same_thread=False)
         
         # allows us to insert inside the database
         self.cursor = self.connection.cursor()
@@ -257,7 +257,7 @@ class database():
 
         # increment by 1, so the next user will 
         # get a unique id (done by auto increment in UserID)
-        UserID = self.cursor.execute("SELECT Users_UserID "
+        UserID = self.cursor.execute("SELECT UserID "
                                      "FROM users "
                                      "WHERE Username=?",(Username,)).fetchone()[0]
 
