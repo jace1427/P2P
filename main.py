@@ -281,6 +281,43 @@ def _populate_contact_list(UserID: int) -> None:
     return
 
 
+# [[MessageID, IV, Text, Timestamp, Sent],...]
+def _populate_message_list(UserID: int, ContactID):
+    """
+    _populate_message_list
+        Helper function for querying the sql database for messages
+        from a specific User and Contact to populate the global MESSAGE_LIST
+
+    :param
+        UserID: The current user's ID
+    :return
+        None
+    """
+    temp_message_list = DATABASE.find_messages(UserID, ContactID)
+    for message in temp_message_list:
+        new_message = []
+
+        # MessageID (no decrypt)
+        new_message.append(int(message[2]))
+
+        # Initialization Vector (no decrypt)
+        new_message.append(c.base642bytes(c.string2bytes(message[3])))
+
+        # Message Text (decrypt)
+        new_message.append(c.bytes2string(c.decrypt_db(
+            c.base642bytes(c.string2bytes(message[4])), DB_KEY, new_contact[1])))
+
+        # Timestamp (decrypt)
+        new_message.append(c.bytes2string(c.decrypt_db(
+            c.base642bytes(c.string2bytes(message[5])), DB_KEY, new_contact[1])))
+
+        # Sent (decrypt)
+        # Might be an Int or a string
+        new_message.append(int(c.bytes2string(c.decrypt_db(
+            c.base642bytes(c.string2bytes(message[6])), DB_KEY, new_contact[1]))))
+
+        MESSAGE_LIST.append(new_message)
+
 def add_contact(Contactname, friendcode, public_key=None):
     """
     Creates a new contact in CONTACT_LIST.
@@ -394,7 +431,7 @@ def receive_message(connection, address):
 
 
     # process flags
-    if message.flag == 'm':
+if message.flag == 'm':
         print("flag: m, text received!")
         #print(message.message)
         # TODO test this encryption
