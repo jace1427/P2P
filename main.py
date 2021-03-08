@@ -28,6 +28,7 @@ from flask import request
 USER_ID = 0            # Every user on the local system will have their own ID.
 CONTACT_LIST = []      # [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey, Port#],...]
 MESSAGE_LIST = []      # [[[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...], ...] something like this?
+USER_IV = None         # the IV created for the user when they made their account. Used for db encryption
 DB_KEY = None          # key used for encrypting and decrypting entries in the database
 PUBLIC_KEY = None      # Users public key
 PRIVATE_KEY = None     # Users private key
@@ -202,7 +203,8 @@ def login(username, password):
         return None
 
     # Step 2 (if step 1 is a success): set global variables: UserID, PUBLIC_KEY, PRIVATE_KEY from what database returned
-    global USER_ID, PUBLIC_KEY, PRIVATE_KEY
+    global USER_ID, PUBLIC_KEY, PRIVATE_KEY, USER_IV
+    USER_IV = User_IV
     USER_ID = UserID
     PUBLIC_KEY = c.decrypt_db(PublicKey, DB_KEY, User_IV)
     PRIVATE_KEY = c.decrypt_db(PrivateKey, DB_KEY, User_IV)
@@ -230,21 +232,20 @@ def login(username, password):
 def add_contact(Contactname, friendcode, public_key=None):
     """
     Creates a new contact in CONTACT_LIST.
-    This contact won't be added into the database until the key exchange process has been completed
-
+    Also adds new contact into database.
+    
+    :param
+        Contactname: name of contact. type: str
+        friendcode: contacts friendcode. type: str
+    :return
+        returns bool
     """
 
     # get machineID, port and ip_address from friendcode
     machine_id, ip_address, port = decode_friend(friendcode)
 
-    # determine the contactID
-    if len(CONTACT_LIST) == 0:
-        # this means we have no contacts, and this will be the first
-        contactID = 0
-    else:
-        # this means we have contacts, so we grab the contactID of the last contact
-        # in the list and increment that value by 1 to get our new contacts contactID
-        contactID = CONTACT_LIST[-1][0] + 1
+    # temp contactID
+    contactID = 0
 
     # create iv
     iv = c.create_iv()
@@ -254,6 +255,30 @@ def add_contact(Contactname, friendcode, public_key=None):
 
     # insert new contact into CONTACT_LIST
     CONTACT_LIST.append(new_contact)
+
+    # encrypt senstitive information
+    enc_machine_id  = c.encrypt_db(machine_id, DB_KEY, USER_IV)
+    enc_Contactname = c.encrypt_db(Contactname, DB_KEY, USER_IV)
+    enc_ip_address  = c.encrypt_db(ip_address, DB_KEY, USER_IV)
+    enc_port        = c.encrypt_db(port, DB_KEY, USER_IV)
+    enc_public_key  = c.encrypt_db(public_key, DB_KEY, USER_IV)
+    enc_secret_key  = c.encrypt_db("temp sk", DB_KEY, USER_IV)
+
+    # create new contact to be added to database
+    new_contact_db = (USER_ID,
+                     iv,
+                     c.bytes2string(c.bytes2base64(enc_machine_id)),
+                     c.bytes2string(c.bytes2base64(enc_Contactname)),
+                     c.bytes2string(c.bytes2base64(enc_ip_address)),
+                     c.bytes2string(c.bytes2base64(enc_port)),
+                     c.bytes2string(c.bytes2base64(enc_public_key)),
+                     c.bytes2string(c.bytes2base64(enc_secret_key)))
+
+    # add contact to database
+    cid = DATABASE.new_contact(new_contact_db)
+
+    # set contactID of new contact to the correct value
+    CONTACT_LIST[-1][0] = cid
 
     return True
 
@@ -375,8 +400,11 @@ def receive_message(connection, address):
 
         #print(CONTACT_LIST[index])
 
-        # DATABASE: add new contact to database
-        foo = db.new_contact((USER_ID, CONTACT_LIST[index][1], CONTACT_LIST[index][2], CONTACT_LIST[index][3], CONTACT_LIST[index][4], CONTACT_LIST[index][7], key, CONTACT_LIST[index][6]))
+        # first encrypt the key
+        enc_key = c.encrypt_db(key, DB_KEY, USER_IV)
+
+        # update the database with the key
+        DATABASE.store_key(enc_key, CONTACT_LIST[index][0])
 
         # NETWORKING: send this message
         new_message = Message(USER_ID, machineID, 'b2', value)
@@ -394,8 +422,11 @@ def receive_message(connection, address):
 
         #print(CONTACT_LIST[index])
         
-        # DATABASE: add new contact to database
-        foo = db.new_contact((USER_ID, CONTACT_LIST[index][1], CONTACT_LIST[index][2], CONTACT_LIST[index][3], CONTACT_LIST[index][4], CONTACT_LIST[index][7], key, CONTACT_LIST[index][6]))
+        # first encrypt the key
+        enc_key = c.encrypt_db(key, DB_KEY, USER_IV)
+
+        # update the database with the key
+        DATABASE.store_key(enc_key, CONTACT_LIST[index][0])
 
         return True
 
