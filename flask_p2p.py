@@ -20,6 +20,10 @@ import main
 app = flask.Flask(__name__)
 app.secret_key = bytes(1)
 
+# Global variables
+FLASK_USERNAME = ""
+FLASK_FRIENDCODE = ""
+
 
 @app.route("/")
 @app.route("/login")
@@ -40,8 +44,10 @@ def login_attempt():
         flask.flash(u"ERROR: Invalid username or password")
         flask.flash(
             u"Usernames and passwords may contain any character except '")
-    else:
+    elif result == -3:
         flask.flash(u"ERROR: User not found")
+    else:
+        flask.flash(u"ERROR: Incorrect password")
     return flask.redirect("/login")
 
 
@@ -88,7 +94,9 @@ def index():
     app.logger.debug("Main page entry")
     contacts = get_contacts()
     return flask.render_template("p2p.html", contacts=contacts,
-                                 contact_length=len(contacts))
+                                 contact_length=len(contacts),
+                                 username_display=main.USERNAME,
+                                 friendcode_display=main.FRIENDCODE)
 
 
 @app.route("/_add_contact", methods=['POST'])
@@ -99,7 +107,9 @@ def _add_contact():
     main.add_contact(name, friendcode)
     contacts = get_contacts()
     return flask.render_template("p2p.html", contacts=contacts,
-                                 contact_length=len(contacts))
+                                 contact_length=len(contacts),
+                                 username_display=main.USERNAME,
+                                 friendcode_display=main.FRIENDCODE)
 
 
 @app.route("/_message_contact", methods=['POST'])
@@ -109,7 +119,9 @@ def _message_contact():
 
     contacts = get_contacts()
     return flask.render_template("p2p.html", contacts=contacts,
-                                 contact_length=len(contacts))
+                                 contact_length=len(contacts),
+                                 username_display=main.USERNAME,
+                                 friendcode_display=main.FRIENDCODE)
 
 
 @app.errorhandler(404)

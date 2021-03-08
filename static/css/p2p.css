@@ -10,7 +10,7 @@
     width: 65%;
     float: left;
     height: 80px;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
 }
 
 .title_right {
@@ -20,7 +20,7 @@
     width: 23.3%;
     float: right;
     height: 80px;
-    margin-bottom: 25px;
+    margin-bottom: 15px;
 }
 
 .misc_right {
@@ -88,7 +88,7 @@
     font-size: 24px;
     font-family: Arial, sans-serif;
     padding-bottom: 10px;
-    padding-top: 10px;
+/*    padding-top: 10px;*/
 }
 
 .add_contact_form_labels {
@@ -129,7 +129,7 @@
 
 .contact_div {
     background-color: #4C495D;
-    height: 720px;
+    height: 800px;
     padding-left: 25px;
     padding-right: 25px;
     padding-bottom: 25px;
@@ -239,7 +239,7 @@ li {
 
 .title_link:visited {}
 
-.title_help{
+.title_help {
     padding-left: 15px;
     padding-right: 15px;
 }
@@ -260,4 +260,10 @@ li {
     left: 1.56%;
     top: 2.78%;
     padding-right: 15px;
+}
+
+.user_info {
+    font-size: 16px;
+    font-family: Arial, sans-serif;
+    color: #FFFFFF;
 }

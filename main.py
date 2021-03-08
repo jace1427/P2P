@@ -26,16 +26,20 @@ from flask import request
 
 
 USER_ID = 0            # Every user on the local system will have their own ID.
-CONTACT_LIST = []      # [[ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey, Port#],...]
-MESSAGE_LIST = []      # [[[UserID, contactID, MessageID, IV, Text, Timestamp, Sent],...], ...] something like this?
+USERNAME = ""          # Empty string to represent user
+FRIENDCODE = ""
+CONTACT_LIST = []      # [[ContactID, IV, MachineID, ContactName, IP_address, SecretKey, PublicKey, Port#],...]
+MESSAGE_LIST = []      # [[MessageID, IV, Text, Timestamp, Sent],...]
 USER_IV = None         # the IV created for the user when they made their account. Used for db encryption
 DB_KEY = None          # key used for encrypting and decrypting entries in the database
 PUBLIC_KEY = None      # Users public key
 PRIVATE_KEY = None     # Users private key
 DIFFIE_HELLMAN = None  # diffie hellman object. see cryptography.py
+LOCAL_IP = None
+
 
 # networking constants
-BUFSIZE = 4096
+BUFSIZE = 4096  # TODO enforce this somewhere
 FORMAT = 'utf-8'  # probably not needed
 SERVER_IP = socket.gethostbyname(socket.gethostname())
 PORT = 5550
@@ -77,7 +81,8 @@ def get_user_ip() -> str:
     return public_ip[:(len(public_ip)-1)]
 
 
-def encode_friend(ip_address, user_id, port):
+def encode_friend(ip_address: str, user_id: int, port: int):
+    print(ip_address)
     ip_address = ip_address.split('.')
     ip_address = list(map(int, ip_address))
     a = 24
@@ -171,6 +176,9 @@ def create_account(username: str, password: str):
 # contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
 def login(username, password):
 
+    global DB_KEY, USER_ID, PUBLIC_KEY, PRIVATE_KEY, \
+        USER_IV, CONTACT_LIST, DATABASE, USERNAME, FRIENDCODE
+
     if not username or not password:
         # print("Username and password cannot be blank")
         return -1
@@ -194,34 +202,30 @@ def login(username, password):
         print("User not found")
         return -3
 
-    global DB_KEY
     # Step 1: Authenticate User
     password_hash = c.pwd2hash(c.string2bytes(password))
 
-    # Step 1a: check if password's hash matches stored hash
+    # Step 2: check if password's hash matches stored hash
     # print(password_hash)
     # print(PasswordHash)
     if (password_hash == PasswordHash):
+        # Step 2a (if step 2 is a success): set global variables
         print("Password was correct!")
         # if the correct password is entered
         DB_KEY = c.pwd2key(c.string2bytes(password))
-        UserID = int(user_info[0])
-        User_IV = c.base642bytes(c.string2bytes(user_info[3]))
-        IP_Adress = c.base642bytes(c.string2bytes(user_info[4]))
-        User_PORT = c.base642bytes(c.string2bytes(user_info[5]))
-        PublicKey = c.base642bytes(c.string2bytes(user_info[6]))
-        PrivateKey = c.base642bytes(c.string2bytes(user_info[7]))
+        USER_ID = int(user_info[0])
+        USERNAME = user_info[1]
+        USER_IV = c.base642bytes(c.string2bytes(user_info[3]))
+        LOCAL_IP = c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(user_info[4])), DB_KEY, USER_IV))
+        User_PORT = int(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(user_info[5])), DB_KEY, USER_IV)))
+        FRIENDCODE = encode_friend(LOCAL_IP, USER_ID, User_PORT)
+        PUBLIC_KEY = c.decrypt_db(c.base642bytes(c.string2bytes(user_info[6])), DB_KEY, USER_IV)
+        PRIVATE_KEY = c.decrypt_db(c.base642bytes(c.string2bytes(user_info[7])), DB_KEY, USER_IV)
     else:
         print("Incorrect password")
         # if the wrong password is entered
-        return None
+        return -4
 
-    # Step 2 (if step 1 is a success): set global variables: UserID, PUBLIC_KEY, PRIVATE_KEY from what database returned
-    global USER_ID, PUBLIC_KEY, PRIVATE_KEY, USER_IV
-    USER_IV = User_IV
-    USER_ID = UserID
-    PUBLIC_KEY = c.decrypt_db(PublicKey, DB_KEY, User_IV)
-    PRIVATE_KEY = c.decrypt_db(PrivateKey, DB_KEY, User_IV)
 
     # Step 3: Populate Contact List global variable
     _populate_contact_list(USER_ID)
@@ -233,25 +237,46 @@ def _populate_contact_list(UserID: int) -> None:
     """
     _populate_contact_list
         Helper function for querying the sql database for contacts
-        to populate the global variabel CONTACT_LIST
+        to populate the global CONTACT_LIST
 
     :param
-        UserID: The current user's ID to differentiate
-                between contacts in the database
+        UserID: The current user's ID
     :return
         None
     """
     temp_contact_list = DATABASE.find_contacts(UserID)
     for contact in temp_contact_list:
         new_contact = []
-        new_contact.append(contact[1])  #contactID no decrypt
-        new_contact.append(c.base642bytes(c.string2bytes(contact[2])))  #IV no decrypt
-        new_contact.append(int(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[3])), DB_KEY, USER_IV))))  #MachineID
-        new_contact.append(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[4])), DB_KEY, USER_IV)))    #contact name
-        new_contact.append(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[5])), DB_KEY, USER_IV)))    #ip address
-        new_contact.append(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[7])), DB_KEY, USER_IV)))    #secret key
-        new_contact.append(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[8])), DB_KEY, USER_IV)))    #public key
-        new_contact.append(int(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(contact[6])), DB_KEY, USER_IV))))    #port
+
+        # ContactID (no decrypt)
+        new_contact.append(int(contact[1]))
+
+        # Initialization Vector (no decrypt)
+        new_contact.append(c.base642bytes(c.string2bytes(contact[2])))
+
+        # Machine ID (decrypt)
+        new_contact.append(int(c.bytes2string(c.decrypt_db(
+            c.base642bytes(c.string2bytes(contact[3])), DB_KEY, new_contact[1]))))
+
+        # Contact name (decrypt)
+        new_contact.append(c.bytes2string(c.decrypt_db(
+            c.base642bytes(c.string2bytes(contact[4])), DB_KEY, new_contact[1])))
+
+        # IP address (decrypt)
+        new_contact.append(c.bytes2string(c.decrypt_db(
+            c.base642bytes(c.string2bytes(contact[5])), DB_KEY, new_contact[1])))
+
+        # Secret key (decrypt)
+        new_contact.append(c.bytes2string(c.decrypt_db(
+            c.base642bytes(c.string2bytes(contact[7])), DB_KEY, new_contact[1])))
+
+        # Public key (decrypt)
+        new_contact.append(c.bytes2string(c.decrypt_db(
+            c.base642bytes(c.string2bytes(contact[8])), DB_KEY, new_contact[1])))
+
+        # Port (decrypt)
+        new_contact.append(int(c.bytes2string(c.decrypt_db(
+            c.base642bytes(c.string2bytes(contact[6])), DB_KEY, new_contact[1]))))
         CONTACT_LIST.append(new_contact)
     return
 
@@ -275,10 +300,10 @@ def add_contact(Contactname, friendcode, public_key=None):
     contactID = 0
 
     # create iv
-    iv = c.create_iv()
+    contactIV = c.create_iv()
 
     # create new contact
-    new_contact = [contactID, iv, machine_id, Contactname, ip_address, "temp sk", public_key, port]
+    new_contact = [contactID, contactIV, machine_id, Contactname, ip_address, "temp sk", public_key, port]
 
     # insert new contact into CONTACT_LIST
     CONTACT_LIST.append(new_contact)
@@ -294,16 +319,16 @@ def add_contact(Contactname, friendcode, public_key=None):
     sk = c.string2bytes("temp sk")
 
     # encrypt senstitive information
-    enc_machine_id  = c.encrypt_db(machine_id, DB_KEY, USER_IV)
-    enc_Contactname = c.encrypt_db(Contactname, DB_KEY, USER_IV)
-    enc_ip_address  = c.encrypt_db(ip_address, DB_KEY, USER_IV)
-    enc_port        = c.encrypt_db(port, DB_KEY, USER_IV)
-    enc_public_key  = c.encrypt_db(public_key, DB_KEY, USER_IV)
-    enc_secret_key  = c.encrypt_db(sk, DB_KEY, USER_IV)
+    enc_machine_id  = c.encrypt_db(machine_id, DB_KEY, contactIV)
+    enc_Contactname = c.encrypt_db(Contactname, DB_KEY, contactIV)
+    enc_ip_address  = c.encrypt_db(ip_address, DB_KEY, contactIV)
+    enc_port        = c.encrypt_db(port, DB_KEY, contactIV)
+    enc_public_key  = c.encrypt_db(public_key, DB_KEY, contactIV)
+    enc_secret_key  = c.encrypt_db(sk, DB_KEY, contactIV)
 
     # create new contact to be added to database
     new_contact_db = (USER_ID,
-                     c.bytes2string(c.bytes2base64(iv)),
+                     c.bytes2string(c.bytes2base64(contactIV)),
                      c.bytes2string(c.bytes2base64(enc_machine_id)),
                      c.bytes2string(c.bytes2base64(enc_Contactname)),
                      c.bytes2string(c.bytes2base64(enc_ip_address)),
