@@ -24,6 +24,9 @@ import flask
 import main
 from flask import request
 
+# general
+from datetime import datetime
+
 
 USER_ID = 0            # Every user on the local system will have their own ID.
 USERNAME = ""          # Empty string to represent user
@@ -282,7 +285,7 @@ def _populate_contact_list(UserID: int) -> None:
 
 
 # [[MessageID, IV, Text, Timestamp, Sent],...]
-def _populate_message_list(UserID: int, ContactID):
+def _populate_message_list(UserID: int, ContactID) -> None:
     """
     _populate_message_list
         Helper function for querying the sql database for messages
@@ -293,6 +296,9 @@ def _populate_message_list(UserID: int, ContactID):
     :return
         None
     """
+    # might want to clear whatever messages are in the list before populating
+    MESSAGE_LIST = []
+
     temp_message_list = DATABASE.find_messages(UserID, ContactID)
     for message in temp_message_list:
         new_message = []
@@ -305,18 +311,19 @@ def _populate_message_list(UserID: int, ContactID):
 
         # Message Text (decrypt)
         new_message.append(c.bytes2string(c.decrypt_db(
-            c.base642bytes(c.string2bytes(message[4])), DB_KEY, new_contact[1])))
+            c.base642bytes(c.string2bytes(message[4])), DB_KEY, new_message[1])))
 
         # Timestamp (decrypt)
         new_message.append(c.bytes2string(c.decrypt_db(
-            c.base642bytes(c.string2bytes(message[5])), DB_KEY, new_contact[1])))
+            c.base642bytes(c.string2bytes(message[5])), DB_KEY, new_message[1])))
 
         # Sent (decrypt)
         # Might be an Int or a string
         new_message.append(int(c.bytes2string(c.decrypt_db(
-            c.base642bytes(c.string2bytes(message[6])), DB_KEY, new_contact[1]))))
+            c.base642bytes(c.string2bytes(message[6])), DB_KEY, new_message[1]))))
 
         MESSAGE_LIST.append(new_message)
+
 
 def add_contact(Contactname, friendcode, public_key=None):
     """
@@ -348,12 +355,12 @@ def add_contact(Contactname, friendcode, public_key=None):
     public_key = "temp pk"
 
     # Convert to bytes
-    machine_id = c.string2bytes(str(machine_id))
+    machine_id  = c.string2bytes(str(machine_id))
     Contactname = c.string2bytes(str(Contactname))
-    ip_address = c.string2bytes(str(ip_address))
-    port = c.string2bytes(str(port))
-    public_key = c.string2bytes(str(public_key))
-    sk = c.string2bytes("temp sk")
+    ip_address  = c.string2bytes(str(ip_address))
+    port        = c.string2bytes(str(port))
+    public_key  = c.string2bytes(str(public_key))
+    sk          = c.string2bytes("temp sk")
 
     # encrypt senstitive information
     enc_machine_id  = c.encrypt_db(machine_id, DB_KEY, contactIV)
@@ -383,6 +390,14 @@ def add_contact(Contactname, friendcode, public_key=None):
 
 
 def start_keyexchange(contact):
+    """
+    starts the keyexchange protocols with the given contact
+
+    :param
+        contact: list
+    :return
+        nothing
+    """
     # create the initial message
     message = Message(USER_ID, contact[2], 'a1', PUBLIC_KEY, None)
 
@@ -394,10 +409,12 @@ def start_keyexchange(contact):
 def receive_message(connection, address):
     """
     This function handles incoming messages.
-
-    :param connection: python socket object
-    :param address: tuple (ip address of sender, port)
-    :return: bool
+    
+    :param
+        connection: python socket object
+        address: tuple (ip address of sender, port)
+    :return 
+        bool
     """
     global DIFFIE_HELLMAN
 
@@ -412,7 +429,7 @@ def receive_message(connection, address):
     # get machineID from message
     machineID = message.user_ID
 
-    # check if message.contact_ID == USER_ID i.e check if message is intended for the current user
+    # check if message.machine_id == USER_ID i.e check if message is intended for the current user
     # TODO: we may have to send an error message back to the sender
     if message.machine_id != USER_ID:
         print("invalid contact\n")
@@ -445,19 +462,30 @@ def receive_message(connection, address):
         # create message iv
         messageIV = c.create_iv()
 
+        # create timestamp and string representation
+        timestamp = datetime.now()
+        datestr = timestamp.strftime("%m/%d/%Y, %H:%M:%S")
+
+        # convert to bytes
+        plaintextb = c.string2bytes(str(plaintext))
+        datestrb   = c.string2bytes(datestr)
+        sent       = c.string2bytes(str(0))
+
         # encrypt sensitive information for the database
-        ciphertext = c.encrypt_db(plaintext, DB_KEY, messageIV)
-        enc_sent   = c.encrypt_db(0, DB_KEY, messageIV)
+        ciphertext    = c.encrypt_db(plaintextb, DB_KEY, messageIV)
+        enc_timestamp = c.encrypt_db(datestrb, DB_KEY, messageIV)
+        enc_sent      = c.encrypt_db(sent, DB_KEY, messageIV)
 
         # add message to database
         MessageID = DATABASE.new_message(USER_ID,
                                         CONTACT_LIST[index][0],
                                         messageIV,
                                         ciphertext,
+                                        enc_timestamp,
                                         enc_sent)
 
         # Add the new message to MESSAGE_LIST and update the GUI if appropriate
-        new_message = [USER_ID, CONTACT_LIST[index][0], MessageID, messageIV, plaintext, "timestamp", 0]
+        new_message = [USER_ID, CONTACT_LIST[index][0], MessageID, messageIV, plaintext, datestr, 0]
 
         MESSAGE_LIST.append(new_message)
 
@@ -552,6 +580,14 @@ def receive_message(connection, address):
 
 
 def create_message(text, contact):
+    """
+    Creates a message object with the given text addressed to the given contact
+
+    param:
+        text: str
+        contact: list
+    return: nothing
+    """
     # get necessary info
     ip_address = contact[4]
     machineID = contact[2]
@@ -568,10 +604,11 @@ def send_message(message, contact):
     Sends a message object to the requested contact.
     Also stores sent message in database.
 
-    param:
-        message: a message object
-        contact: a list
-    return:
+    :param
+        message: message object
+        contact: list
+    :return
+        nothing
     """
 
     # get necessary info
@@ -602,9 +639,18 @@ def send_message(message, contact):
         # create message iv
         messageIV = c.create_iv()
 
+        # create timestamp and string representation
+        timestamp = datetime.now()
+        datestr = timestamp.strftime("%m/%d/%Y, %H:%M:%S")
+
+        # convert to bytes
+        plaintextb = c.string2bytes(str(plaintext))
+        datestrb   = c.string2bytes(datestr)
+        sent       = c.string2bytes(str(1))
+
         # encrypt sensitive information for the database
         ciphertext = c.encrypt_db(plaintext, DB_KEY, messageIV)
-        enc_sent   = c.encrypt_db(1, DB_KEY, messageIV)
+        enc_sent   = c.encrypt_db(sent, DB_KEY, messageIV)
 
         # add message to database
         MessageID = DATABASE.new_message(USER_ID,
@@ -614,7 +660,7 @@ def send_message(message, contact):
                                         enc_sent)
 
         # add new message to MESSAGE_LIST
-        new_message = [USER_ID, contact[0], MessageID, messageIV, plaintext, "timestamp", 1]
+        new_message = [USER_ID, contact[0], MessageID, messageIV, plaintext, datestr, 1]
 
         MESSAGE_LIST.append(new_message)
 

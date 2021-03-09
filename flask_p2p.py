@@ -135,6 +135,48 @@ def _message_contact():
                                  friendcode_display=main.FRIENDCODE)
 
 
+@app.route("/send_message", methods=['POST'])
+def send_message():
+
+    # get the text
+    text = request.form["text"]
+    app.logger.debug(f"text to send: {text}")
+
+    # get contact list
+    contacts = get_contacts()
+    app.logger.debug(f"contacts: {contacts}")
+
+    # get message list
+    messages = get_messages()
+    app.logger.debug(f"messages: {messages}")
+
+    # key exchange test
+    # maybe add check if this has been done already
+    if text == "start_keys":
+        app.logger.debug(f"starting the key exchange protocol")
+        main.start_keyexchange(contacts[CURRENT_RECIPIENT])
+        return flask.render_template("p2p.html", contacts=contacts,
+                                 contact_length=len(contacts),
+                                 messages=messages,
+                                 messages_length=len(messages),
+                                 username_display=main.USERNAME,
+                                 friendcode_display=main.FRIENDCODE)
+
+    # create the message
+    message = main.create_message(text, contacts[CURRENT_RECIPIENT])
+    app.logger.debug(f"message: {message}")
+
+    # send the message
+    main.send_message(message, contacts[CURRENT_RECIPIENT])
+
+    return flask.render_template("p2p.html", contacts=contacts,
+                                 contact_length=len(contacts),
+                                 messages=messages,
+                                 messages_length=len(messages),
+                                 username_display=main.USERNAME,
+                                 friendcode_display=main.FRIENDCODE)
+
+
 @app.errorhandler(404)
 def page_not_found(error):
     app.logger.debug("Page not found")
@@ -143,7 +185,8 @@ def page_not_found(error):
 
 
 def get_contacts():
-    return [(i[3], i[0]) for i in main.CONTACT_LIST]
+    #return [(i[3], i[0]) for i in main.CONTACT_LIST]
+    return [i for i in main.CONTACT_LIST]
 
 
 def get_messages():

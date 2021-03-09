@@ -105,7 +105,7 @@ class database():
             None
         """
         # creates messages table
-        self.cursor.execute("CREATE TABLE messages (CONTACTS_USER_UserID INT, CONTACTS_ContactID INT, MessageID INTEGER PRIMARY KEY, IV VARCHAR(45), Text VARCHAR(255), Timestamp DATETIME, Sent INT)")
+        self.cursor.execute("CREATE TABLE messages (CONTACTS_USER_UserID INT, CONTACTS_ContactID INT, MessageID INTEGER PRIMARY KEY, IV VARCHAR(45), Message VARCHAR(255), TimeDate VARCHAR(45), Sent INT)")
 
         self.connection.commit()
 
@@ -293,7 +293,7 @@ class database():
         return ContactID
 
     def new_message(self, UserID: int, ContactID: int,
-                    IV: str, Text: str, Sent: int) -> int:
+                    IV: str, Message: str, TimeDate: str, Sent: int) -> int:
         """
         Create a new message
         Note: the first message should have MessageID=0 and each subsequent
@@ -305,13 +305,14 @@ class database():
             UserID : user's id
             ContactID : contact's id
             IV : initialization vector for encryption
-            Text : contents of the message
+            Message : contents of the message
+            TimeDate : str of the timestamp of the message
             Sent : whether or not the message was sent (1 if sent, 0 if not)
         Return:
             MessageID : the id of the newly created message
         """
         # insert the new message into our messages table
-        self.insert("messages", [UserID, ContactID, IV, Text, Sent])
+        self.insert("messages", [UserID, ContactID, IV, Message, TimeDate, Sent])
 
         # commit the changes to the database so we can access them
         self.connection.commit()

@@ -65,7 +65,7 @@ body {
                 </div>
             </div>
             <br />
-            <form action="/messaging_test" method="POST">
+            <form action="/send_message" method="POST">
                 <input type="text" name="text" class="message" placeholder="..."/>
                 <input type="submit" class="send" value="Send" />
             </form>
@@ -81,9 +81,9 @@ body {
                         {% for i in range(contact_length) %}
                             <li>
                                 <form action="/_message_contact" method="POST">
-                                    {{ contacts[i][0] }}
+                                    {{ contacts[i][3] }}
                                     <input class="message_contact" id="message_contact" type="submit" value="Message" />
-                                    <input type="hidden" name="ind" value="{{ contacts[i][1] }}">
+                                    <input type="hidden" name="ind" value="{{ contacts[i][0] }}">
                                 </form>
                             </li>
                         {% endfor %}
