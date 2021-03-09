@@ -414,7 +414,7 @@ def receive_message(connection, address):
 
     # check if message.contact_ID == USER_ID i.e check if message is intended for the current user
     # TODO: we may have to send an error message back to the sender
-    if message.contact_ID != USER_ID:
+    if message.machine_id != USER_ID:
         print("invalid contact\n")
         return False
 
@@ -442,19 +442,22 @@ if message.flag == 'm':
         # decrypt message
         plaintext = c.decrypt_mssg(message.message, secret_key, message.tag, message.nonce)
 
+        # create message iv
+        messageIV = c.create_iv()
+
         # encrypt sensitive information for the database
-        ciphertext = c.encrypt_db(plaintext, DB_KEY, USER_IV)
-        enc_sent   = c.encrypt_db(0, DB_KEY, USER_IV)
+        ciphertext = c.encrypt_db(plaintext, DB_KEY, messageIV)
+        enc_sent   = c.encrypt_db(0, DB_KEY, messageIV)
 
         # add message to database
         MessageID = DATABASE.new_message(USER_ID,
                                         CONTACT_LIST[index][0],
-                                        USER_IV,
+                                        messageIV,
                                         ciphertext,
                                         enc_sent)
 
         # Add the new message to MESSAGE_LIST and update the GUI if appropriate
-        new_message = [USER_ID, CONTACT_LIST[index][0], MessageID, USER_IV, plaintext, "timestamp", 0]
+        new_message = [USER_ID, CONTACT_LIST[index][0], MessageID, messageIV, plaintext, "timestamp", 0]
 
         MESSAGE_LIST.append(new_message)
 
@@ -561,6 +564,16 @@ def create_message(text, contact):
 
 # contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
 def send_message(message, contact):
+    """
+    Sends a message object to the requested contact.
+    Also stores sent message in database.
+
+    param:
+        message: a message object
+        contact: a list
+    return:
+    """
+
     # get necessary info
     ip_address = contact[4]
     port = contact[7]
@@ -577,6 +590,33 @@ def send_message(message, contact):
     client.close()
 
     # TODO NETWORK: if message is successfully sent, update database, MESSAGE_LIST, and GUI if appropriate
+
+    # we only want to store messages with the 'm' flag
+    if message.flag == 'm':
+        # create secret key from contact
+        secret_key = contact[5]
+
+        # decrypt message
+        plaintext = c.decrypt_mssg(message.message, secret_key, message.tag, message.nonce)
+
+        # create message iv
+        messageIV = c.create_iv()
+
+        # encrypt sensitive information for the database
+        ciphertext = c.encrypt_db(plaintext, DB_KEY, messageIV)
+        enc_sent   = c.encrypt_db(1, DB_KEY, messageIV)
+
+        # add message to database
+        MessageID = DATABASE.new_message(USER_ID,
+                                        contact[0],
+                                        messageIV,
+                                        ciphertext,
+                                        enc_sent)
+
+        # add new message to MESSAGE_LIST
+        new_message = [USER_ID, contact[0], MessageID, messageIV, plaintext, "timestamp", 1]
+
+        MESSAGE_LIST.append(new_message)
 
 
 # [[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...]
