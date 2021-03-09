@@ -2,7 +2,7 @@
 
 Functions:
 
-    index
+
 
 Author:
 
@@ -23,6 +23,7 @@ app.secret_key = bytes(1)
 # Global variables
 FLASK_USERNAME = ""
 FLASK_FRIENDCODE = ""
+CURRENT_RECIPIENT = 0
 
 
 @app.route("/")
@@ -92,9 +93,12 @@ def contact_us():
 @app.route("/index")
 def index():
     app.logger.debug("Main page entry")
+    messages = get_messages()
     contacts = get_contacts()
     return flask.render_template("p2p.html", contacts=contacts,
                                  contact_length=len(contacts),
+                                 messages=messages,
+                                 messages_length=len(messages),
                                  username_display=main.USERNAME,
                                  friendcode_display=main.FRIENDCODE)
 
@@ -105,9 +109,12 @@ def _add_contact():
     friendcode = request.form['friendcode']
     name = request.form['name']
     main.add_contact(name, friendcode)
+    messages = get_messages()
     contacts = get_contacts()
     return flask.render_template("p2p.html", contacts=contacts,
                                  contact_length=len(contacts),
+                                 messages=messages,
+                                 messages_length=len(messages),
                                  username_display=main.USERNAME,
                                  friendcode_display=main.FRIENDCODE)
 
@@ -116,10 +123,14 @@ def _add_contact():
 def _message_contact():
     contact_id = request.form["ind"]
     app.logger.debug(f"Messaging contact: {contact_id}")
-
+    CURRENT_RECIPIENT = int(contact_id)
+    main._populate_message_list(main.USER_ID, CURRENT_RECIPIENT)
+    messages = get_messages()
     contacts = get_contacts()
     return flask.render_template("p2p.html", contacts=contacts,
                                  contact_length=len(contacts),
+                                 messages=messages,
+                                 messages_length=len(messages),
                                  username_display=main.USERNAME,
                                  friendcode_display=main.FRIENDCODE)
 
@@ -133,6 +144,10 @@ def page_not_found(error):
 
 def get_contacts():
     return [(i[3], i[0]) for i in main.CONTACT_LIST]
+
+
+def get_messages():
+    return [(i[3], i[2]) for i in main.MESSAGE_LIST]
 
 
 if __name__ == '__main__':

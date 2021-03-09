@@ -53,7 +53,15 @@ body {
                     <label>Message Log</label>
                 </div>
                 <div class="message_log">
-                    TODO
+                    <nav>
+                        <ul>
+                            {% for i in range(messages_length) %}
+                                <li>
+                                    {{ messages[i][0] }}: {{ messages[i][1] }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </nav>
                 </div>
             </div>
             <br />

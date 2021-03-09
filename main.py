@@ -195,8 +195,8 @@ def login(username, password):
         PasswordHash = c.base642bytes(c.string2bytes(user_info[2]))
         if CONTACT_LIST:
             CONTACT_LIST.clear()
-        if MESSAGE_LIST:
-            MESSAGE_LIST.clear()
+        # if MESSAGE_LIST:
+        #     MESSAGE_LIST.clear()
     else:
         # database will return empty list if user not found
         print("User not found")
@@ -431,7 +431,7 @@ def receive_message(connection, address):
 
 
     # process flags
-if message.flag == 'm':
+    if message.flag == 'm':
         print("flag: m, text received!")
         #print(message.message)
         # TODO test this encryption
