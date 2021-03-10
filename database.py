@@ -49,7 +49,7 @@ class database():
         # feature in each of them
         self.USER_COLUMNS = ("Username", "PasswordHash", "IV", "IP_address", "Port", "PublicKey", "PrivateKey")
         self.CONTACTS_COLUMNS = ("Users_UserID", "IV", "MachineID", "ContactName", "IP_address", "Port", "SecretKey", "PublicKey")
-        self.MESSAGES_COLUMNS = ("CONTACTS_USER_UserID", "CONTACTS_ContactID", "IV", "Text", "Timestamp", "Sent")
+        self.MESSAGES_COLUMNS = ("CONTACTS_USER_UserID", "CONTACTS_ContactID", "IV", "Message", "TimeDate", "Sent")
 
         # USER_COLUMNS with UserID added
         self.user_columns = ("UserID", "Username", "PasswordHash", "IV", "IP_address", "Port", "PublicKey", "PrivateKey")
@@ -293,7 +293,7 @@ class database():
         return ContactID
 
     def new_message(self, UserID: int, ContactID: int,
-                    IV: str, Message: str, TimeDate: str, Sent: int) -> int:
+                    IV: str, Text: str, Timestamp: str, Sent: int) -> int:
         """
         Create a new message
         Note: the first message should have MessageID=0 and each subsequent
@@ -305,22 +305,25 @@ class database():
             UserID : user's id
             ContactID : contact's id
             IV : initialization vector for encryption
-            Message : contents of the message
-            TimeDate : str of the timestamp of the message
+            Text : contents of the message
+            Timestamp : str of the timestamp of the message
             Sent : whether or not the message was sent (1 if sent, 0 if not)
         Return:
             MessageID : the id of the newly created message
         """
-        # insert the new message into our messages table
-        self.insert("messages", [UserID, ContactID, IV, Message, TimeDate, Sent])
+        values = (UserID, ContactID, IV, Text, Timestamp, Sent)
 
+        # insert the new message into our messages table
+        self.insert("messages", self.MESSAGES_COLUMNS, values)
+
+        # Not sure what this does, the other new_*() functions don't have this - Riley
         # commit the changes to the database so we can access them
         self.connection.commit()
-        # WHERE TF DOES VALUES COME FROM
+        
         MessageID = self.cursor.execute("SELECT MessageID"
                                         "FROM messages"
                                         "WHERE IV=?",
-                                        (values[2]),).fetchone()[0]
+                                        (values[2],)).fetchone()[0]
 
         return MessageID
 
