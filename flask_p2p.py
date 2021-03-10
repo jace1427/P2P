@@ -16,6 +16,7 @@ TODO:
 import flask
 from flask import request
 import main
+# import threading
 
 app = flask.Flask(__name__)
 app.secret_key = bytes(1)
@@ -29,6 +30,9 @@ CURRENT_RECIPIENT = 0
 @app.route("/")
 @app.route("/login")
 def login():
+    if main.SERVER_THREAD is not None:
+        main.SERVER_THREAD.terminate()
+        main.SERVER_THREAD = None
     return flask.render_template("login.html")
 
 
@@ -38,6 +42,8 @@ def login_attempt():
     password = request.form["password-input"]
     result = main.login(username, password)
     if result == 0:
+        if main.SERVER_THREAD is not None:
+            main.SERVER_THREAD.start()
         return flask.redirect("/index")
     elif result == -1:
         flask.flash(u"ERROR: Username or password cannot be blank")
@@ -196,4 +202,6 @@ def get_messages():
 if __name__ == '__main__':
     PORT = 5000
     print(f"Opening for global access on port {PORT}")
+    # server_thread = threading.Thread(target=main.start_server, args=[])
+    # server_thread.start()
     app.run(port=PORT, host="0.0.0.0", debug=True, threaded=False)

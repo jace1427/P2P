@@ -14,15 +14,12 @@ import database as d
 # needed for networking
 import socket
 import threading
+import multiprocessing
 import sys
 import traceback
 import pickle
 from requests import get
-
-# flask imports
-import flask
-import main
-from flask import request
+import ctypes
 
 # general
 from datetime import datetime
@@ -39,13 +36,31 @@ PUBLIC_KEY = None      # Users public key
 PRIVATE_KEY = None     # Users private key
 DIFFIE_HELLMAN = None  # diffie hellman object. see cryptography.py
 LOCAL_IP = None
+SERVER_THREAD = None
 
 
 # networking constants
 BUFSIZE = 4096  # TODO enforce this somewhere
 FORMAT = 'utf-8'  # probably not needed
 SERVER_IP = socket.gethostbyname(socket.gethostname())
+# SERVER_IP = "10.0.0.164"
 PORT = 5550
+
+
+def kill_thread(thread):
+    """
+    thread: a threading.Thread object
+
+    Credit to stackoverflow user "serg06"
+    """
+    global SERVER_THREAD
+    thread_id = thread.ident
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, ctypes.py_object(SystemExit))
+    print("res: ", res)
+    if res > 1:
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
+        print('Exception raise failure')
+    SERVER_THREAD = None
 
 
 def initialize_database(db_name: str):
@@ -180,7 +195,8 @@ def create_account(username: str, password: str):
 def login(username, password):
 
     global DB_KEY, USER_ID, PUBLIC_KEY, PRIVATE_KEY, \
-        USER_IV, CONTACT_LIST, DATABASE, USERNAME, FRIENDCODE
+        USER_IV, CONTACT_LIST, DATABASE, USERNAME, \
+        FRIENDCODE, SERVER_THREAD, SERVER_THREAD_LOCAL
 
     if not username or not password:
         # print("Username and password cannot be blank")
@@ -232,6 +248,10 @@ def login(username, password):
 
     # Step 3: Populate Contact List global variable
     _populate_contact_list(USER_ID)
+
+    # Step 4: start server
+    SERVER_THREAD = multiprocessing.Process(target=start_server, args=(USER_ID, DB_KEY))
+
 
     return 0
 
@@ -437,6 +457,8 @@ def receive_message(connection, address):
 
     # close the connection
     connection.close()
+
+    _populate_contact_list(USER_ID)
 
     # find contact in CONTACT_LIST based on ip_address and machineID
     index = 0
@@ -676,13 +698,16 @@ def decipher_message_list(messages):
     return messages
 
 
-def start_server():
+def start_server(user_id: int, db_key: bytes):
     """
     The purpose of this function is to
     (a) create a server socket
     (b) listen for connections
     (c) handle incoming messages
     """
+    global USER_ID, DB_KEY, STOP_SERVER
+    USER_ID = user_id
+    DB_KEY = db_key
 
     # create a socket
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -715,4 +740,5 @@ def start_server():
 
 if __name__ == "__main__":
     # start the message server
+    print(SERVER_IP)
     start_server()
