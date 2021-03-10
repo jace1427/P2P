@@ -320,10 +320,9 @@ class database():
         # commit the changes to the database so we can access them
         self.connection.commit()
         
-        MessageID = self.cursor.execute("SELECT MessageID"
-                                        "FROM messages"
-                                        "WHERE IV=?",
-                                        (values[2],)).fetchone()[0]
+        MessageID = self.cursor.execute("SELECT MessageID "
+                                        "FROM messages "
+                                        "WHERE IV=?", (values[2],)).fetchone()[0]
 
         return MessageID
 
