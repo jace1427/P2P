@@ -119,7 +119,7 @@ def encode_friend(ip_address: str, user_id: int, port: int):
 def decode_friend(friendcode):
     friendcode = int(friendcode, 16)
     ip_address = []
-    while friendcode != 0:
+    for i in range(7):
         ip_address.append(friendcode & 255)
         friendcode = friendcode >> 8
     machine_id = ip_address.pop(0)
