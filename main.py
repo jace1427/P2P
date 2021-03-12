@@ -384,14 +384,12 @@ def add_contact(Contactname, friendcode, public_key=None):
     # insert new contact into CONTACT_LIST
     CONTACT_LIST.append(new_contact)
 
-    public_key = "temp pk"  #TODO FIX THIS SHIT DUDE WHAT THE FUCK
-
     # Convert to bytes
     machine_id  = c.string2bytes(str(machine_id))
     Contactname = c.string2bytes(str(Contactname))
     ip_address  = c.string2bytes(str(ip_address))
     port        = c.string2bytes(str(port))
-    public_key  = c.string2bytes(public_key)
+    public_key  = c.string2bytes("temp pk")
     sk          = c.string2bytes("temp sk")
 
     # encrypt senstitive information
