@@ -60,11 +60,17 @@ Located on the main page are two main areas, the Message Log and the Contacts se
 Under the Contacts section you will see your username displayed along with your friendcode.
 This friendcode is all you need to share with someone you want to chat with. It is a special number that contains your ip address, port number, and user ID.
 
+[Friendcode](https://i.imgur.com/OUwMYFK.png)
+
 Below your friendcode is where you can enter the name and friendcode of someone you want to add as a contact. Simply enter the information into the designated text boxes and select 'Add Contact'.
+
+[Add Contact](https://i.imgur.com/ITwqncO.png)
 
 [RESERVED FOR KEY EXCHANGE DETAILS]
 
 Once keys have been exchanged, messages can be sent. Select the 'Message' button next to the contact you wish to message. Selecting the 'Message' button should populate the chat log with any messages stored in the database between you and the selected contact.
+
+[Message Button](https://i.imgur.com/RCmRwoz.png)
 
 Once a contact has been selected, enter your message into the text box under the Message Log and select 'Send'. 
 
