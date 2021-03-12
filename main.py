@@ -2,6 +2,13 @@
 Main
 2021/02/26
 
+Authors:
+    Adam Christensen
+    Riley Matthews
+    Justin Spidell
+    Evan Podrabsky
+    Lannin Nakai
+
 NOTE: A lot of these functions and classes will probably be moved to the network/GUI module
 NOTE: the cryptography module uses byte strings (e.g. b'this is a byte') and database might also.
 NOTE: what is not included in this code/skeleton is how to verify if a message has been received
@@ -49,6 +56,7 @@ with open("config.txt") as config:
     port = port[5:len(port)]
     if len(server_ip) < 7 or len(server_ip) > 15:
         sys.stderr.write("ERROR: Specified IPV4 address is not valid")
+        sys.exit()
     try:
         port = int(port)
         if port < 0 or port > 65535:
@@ -56,6 +64,7 @@ with open("config.txt") as config:
                              "standardized range")
     except:
         sys.stderr.write("ERROR: Specified port number is not an integer")
+        sys.exit()
     SERVER_IP = server_ip
     PORT = port
 
