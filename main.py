@@ -34,6 +34,7 @@ from datetime import datetime
 USER_ID = 0            # Every user on the local system will have their own ID.
 USERNAME = ""          # Empty string to represent user
 FRIENDCODE = ""
+INTERNAL_FRIENDCODE = ""
 CONTACT_LIST = []      # [[ContactID, IV, MachineID, ContactName, IP_address, SecretKey, PublicKey, Port#],...]
 MESSAGE_LIST = []      # [[MessageID, IV, Text, Timestamp, Sent],...]
 USER_IV = None         # the IV created for the user when they made their account. Used for db encryption
@@ -202,7 +203,7 @@ def login(username, password):
 
     global DB_KEY, USER_ID, PUBLIC_KEY, PRIVATE_KEY, \
         USER_IV, CONTACT_LIST, DATABASE, USERNAME, \
-        FRIENDCODE, SERVER_THREAD, PUBLIC_IP, SERVER_IP, PORT
+        FRIENDCODE, SERVER_THREAD, PUBLIC_IP, SERVER_IP, PORT, INTERNAL_FRIENDCODE
 
     if not username or not password:
         # print("Username and password cannot be blank")
@@ -244,6 +245,7 @@ def login(username, password):
         PUBLIC_IP = c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(user_info[4])), DB_KEY, USER_IV))
         User_PORT = int(c.bytes2string(c.decrypt_db(c.base642bytes(c.string2bytes(user_info[5])), DB_KEY, USER_IV)))
         FRIENDCODE = encode_friend(PUBLIC_IP, USER_ID, User_PORT)
+        INTERNAL_FRIENDCODE = encode_friend('127.0.0.1', USER_ID, User_PORT)
         PUBLIC_KEY = c.decrypt_db(c.base642bytes(c.string2bytes(user_info[6])), DB_KEY, USER_IV)
         PRIVATE_KEY = c.decrypt_db(c.base642bytes(c.string2bytes(user_info[7])), DB_KEY, USER_IV)
     else:
@@ -765,6 +767,8 @@ def start_server(user_id: int, db_key: bytes, user_iv: bytes,
 
     # create a socket
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    
     print(SERVER_IP, " ", PORT)
     try:
         server.bind((SERVER_IP, PORT))

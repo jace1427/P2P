@@ -68,14 +68,12 @@ body {
                 <div>
                     <p class="user_info"> {{ current_message }}</p>
                     <div>
-                    {% if messages %}
                         <form action="/clear">
                             <input type="submit" class="clear_button" value="Clear"/>
                         </form>
                         <form action="/key_exchange">
                             <input type="submit" class="key_button" value="Initiate key exchange"/>
                         </form>
-                    {% endif %}
                     </div>
                 </div>
             </div>
@@ -118,6 +116,7 @@ body {
                 <div class="user_info">
                     <p>Your Username: {{ username_display }}</p>
                     <p>Your Friendcode: {{ friendcode_display }}</p>
+                    <p>Your Internal Friendcode (for testing locally): {{ internal_friendcode_display }} </p>
                 </div>
                 <br />
                 <div class="add_contact_label">

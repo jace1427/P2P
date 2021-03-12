@@ -120,6 +120,7 @@ def index():
                                  messages_length=len(messages),
                                  username_display=main.USERNAME,
                                  friendcode_display=main.FRIENDCODE,
+                                 internal_friendcode_display=main.INTERNAL_FRIENDCODE,
                                  current_message=CURRENT_CONNECTION)
 
 
