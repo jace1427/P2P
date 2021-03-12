@@ -42,7 +42,7 @@
     background-color: #4C495D;
     padding-left: 25px;
     padding-right: 25px;
-    padding-bottom: 20px;
+    padding-bottom: 40px;
 }
 
 .login_box {
@@ -235,6 +235,13 @@ li:nth-child(odd) {
 .clear_button {
     width: auto;
     display: inline-block;
+    float: right
+}
+
+.key_button {
+    width: auto
+    display: inline-block;
+    float: left
 }
 
 .messaging_info {

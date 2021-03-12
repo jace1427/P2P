@@ -67,11 +67,16 @@ body {
                 </div>
                 <div>
                     <p class="user_info"> {{ current_message }}</p>
+                    <div>
                     {% if messages %}
                         <form action="/clear">
                             <input type="submit" class="clear_button" value="Clear"/>
                         </form>
+                        <form action="/key_exchange">
+                            <input type="submit" class="key_button" value="Initiate key exchange"/>
+                        </form>
                     {% endif %}
+                    </div>
                 </div>
             </div>
             <br />

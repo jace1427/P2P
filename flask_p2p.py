@@ -153,17 +153,8 @@ def _message_contact():
 @app.route("/send_message", methods=['POST'])
 def send_message():
 
-    if CURRENT_RECIPIENT == 0:
-        flask.flash(u"ERROR: Must specify contact before sending message")
-        return flask.redirect("/index")
-
     # get the text
     text = request.form["text"]
-
-    if len(text) > 255:
-        flask.flash(u"ERROR: Message cannot be longer than 255 characters")
-        return flask.redirect("/index")
-    app.logger.debug(f"text to send: {text}")
 
     # update contact list
     main._clear_contact_list()
@@ -171,11 +162,29 @@ def send_message():
 
     # get contact list
     contacts = get_contacts()
-    app.logger.debug(f"contacts: {contacts}")
+    print(contacts)
 
     # get message list
     messages = get_messages()
-    app.logger.debug(f"messages: {messages}")
+
+    if CURRENT_RECIPIENT == 0:
+        flask.flash(u"ERROR: Must specify contact before sending message")
+        return flask.redirect("/index")
+    elif len(text) > 255:
+        flask.flash(u"ERROR: Message cannot be longer than 255 characters")
+        return flask.redirect("/index")
+    elif len(contacts[CURRENT_RECIPIENT - 1][5]) < 10:
+        flask.flash(u"ERROR: Cannot initiate messaging with a contact until an initial key exchange has taken place")
+        return flask.redirect("/index")
+    # app.logger.debug(f"text to send: {text}")
+
+
+
+
+    # app.logger.debug(f"contacts: {contacts}")
+    #
+    #
+    # app.logger.debug(f"messages: {messages}")
 
     # key exchange test
     # maybe add check if this has been done already
@@ -195,6 +204,13 @@ def send_message():
     main._clear_message_list()
     main._populate_message_list(main.USER_ID, contacts[CURRENT_RECIPIENT - 1][0])
 
+    return flask.redirect("/index")
+
+
+@app.route("/key_exchange")
+def global_key_exchange():
+    contacts = get_contacts()
+    main.start_keyexchange(contacts[CURRENT_RECIPIENT - 1])
     return flask.redirect("/index")
 
 
