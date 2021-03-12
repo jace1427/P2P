@@ -44,6 +44,7 @@ def login_attempt():
     result = main.login(username, password)
     if result == 0:
         if main.SERVER_THREAD is not None:
+            CURRENT_RECIPIENT = 0
             main.SERVER_THREAD.start()
         return flask.redirect("/index")
     elif result == -1:
@@ -56,7 +57,6 @@ def login_attempt():
         flask.flash(u"ERROR: User not found")
     else:
         flask.flash(u"ERROR: Incorrect password")
-    CURRENT_RECIPIENT = 0
     return flask.redirect("/login")
 
 
@@ -101,8 +101,6 @@ def contact_us():
 @app.route("/index")
 def index():
     app.logger.debug("Main page entry")
-    print(main.CONTACT_LIST)
-    print(main.MESSAGE_LIST)
     messages = get_messages()
     contacts = get_contacts()
     return flask.render_template("p2p.html", contacts=contacts,
@@ -123,12 +121,6 @@ def _add_contact():
     main._populate_contact_list(main.USER_ID)
     messages = get_messages()
     contacts = get_contacts()
-    # return flask.render_template("p2p.html", contacts=contacts,
-    #                              contact_length=len(contacts),
-    #                              messages=messages,
-    #                              messages_length=len(messages),
-    #                              username_display=main.USERNAME,
-    #                              friendcode_display=main.FRIENDCODE)
     return flask.redirect("/index")
 
 
@@ -138,16 +130,10 @@ def _message_contact():
     contact_id = request.form["ind"]
     app.logger.debug(f"Messaging contact: {contact_id}")
     CURRENT_RECIPIENT = int(contact_id)
-    main._clear_message_list()
-    main._populate_message_list(main.USER_ID, CURRENT_RECIPIENT)
-    messages = get_messages()
     contacts = get_contacts()
-    # return flask.render_template("p2p.html", contacts=contacts,
-    #                              contact_length=len(contacts),
-    #                              messages=messages,
-    #                              messages_length=len(messages),
-    #                              username_display=main.USERNAME,
-    #                              friendcode_display=main.FRIENDCODE)
+    main._clear_message_list()
+    main._populate_message_list(main.USER_ID, contacts[CURRENT_RECIPIENT - 1][0])
+    messages = get_messages()
     return flask.redirect("/index")
 
 
@@ -155,11 +141,15 @@ def _message_contact():
 def send_message():
 
     if CURRENT_RECIPIENT == 0:
-        flask.flash(f"TRYING TO SEND A MESSAGE WITHOUT A CONTACT, EH?\n FEELING DUMB YET?")
+        flask.flash(u"ERROR: Must specify contact before sending message")
         return flask.redirect("/index")
 
     # get the text
     text = request.form["text"]
+
+    if len(text) > 255:
+        flask.flash(u"ERROR: Message cannot be longer than 255 characters")
+        return flask.redirect("/index")
     app.logger.debug(f"text to send: {text}")
 
     # update contact list
@@ -179,12 +169,6 @@ def send_message():
     if text == "start_keys":
         app.logger.debug(f"starting the key exchange protocol")
         main.start_keyexchange(contacts[CURRENT_RECIPIENT - 1])
-        # return flask.render_template("p2p.html", contacts=contacts,
-        #                          contact_length=len(contacts),
-        #                          messages=messages,
-        #                          messages_length=len(messages),
-        #                          username_display=main.USERNAME,
-        #                          friendcode_display=main.FRIENDCODE)
         return flask.redirect("/index")
 
 
@@ -196,15 +180,8 @@ def send_message():
 
     # update message list
     main._clear_message_list()
-    main._populate_message_list(main.USER_ID, CURRENT_RECIPIENT)
-    print(main.MESSAGE_LIST)
+    main._populate_message_list(main.USER_ID, contacts[CURRENT_RECIPIENT - 1][0])
 
-    # return flask.render_template("p2p.html", contacts=contacts,
-    #                              contact_length=len(contacts),
-    #                              messages=messages,
-    #                              messages_length=len(messages),
-    #                              username_display=main.USERNAME,
-    #                              friendcode_display=main.FRIENDCODE)
     return flask.redirect("/index")
 
 
@@ -220,12 +197,12 @@ def get_contacts():
 
 
 def get_messages():
-    return [(i[3], i[2]) for i in main.MESSAGE_LIST]
+    main._clear_contact_list()
+    main._populate_contact_list(main.USER_ID)
+    return [(i[3], i[2], i[4], main.CONTACT_LIST[CURRENT_RECIPIENT - 1][3]) for i in main.MESSAGE_LIST]
 
 
 if __name__ == '__main__':
     PORT = 5000
     print(f"Opening for global access on port {PORT}")
-    # server_thread = threading.Thread(target=main.start_server, args=[])
-    # server_thread.start()
     app.run(port=PORT, host="0.0.0.0", debug=True, threaded=False)

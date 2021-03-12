@@ -56,9 +56,11 @@ body {
                     <nav>
                         <ul>
                             {% for i in range(messages_length) %}
-                                <li>
-                                    {{ messages[i][0] }}: {{ messages[i][1] }}
-                                </li>
+                                {% if messages[i][2] == 0 %}
+                                <li>({{ messages[i][3] }}) {{ messages[i][0] }}: {{ messages[i][1] }}</li>
+                                {% else %}
+                                <li>(me) {{ messages[i][0] }}: {{ messages[i][1] }}</li>
+                                {% endif %}
                             {% endfor %}
                         </ul>
                     </nav>
@@ -68,6 +70,17 @@ body {
             <form action="/send_message" method="POST">
                 <input type="text" name="text" class="message" placeholder="..."/>
                 <input type="submit" class="send" value="Send" />
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <ul class=flashes>
+                            {% for message in messages %}
+                                <p style="color:#FF0000;
+                                font-family: Arial, sans-serif;
+                                font-size: 16px" class="{{ category }}">{{ message }}</p>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
             </form>
         </div>
 
@@ -83,7 +96,7 @@ body {
                                 <form action="/_message_contact" method="POST">
                                     {{ contacts[i][3] }}
                                     <input class="message_contact" id="message_contact" type="submit" value="Message" />
-                                    <input type="hidden" name="ind" value="{{ contacts[i][0] }}">
+                                    <input type="hidden" name="ind" value="{{ i + 1 }}">
                                 </form>
                             </li>
                         {% endfor %}
