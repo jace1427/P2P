@@ -57,13 +57,21 @@ body {
                         <ul>
                             {% for i in range(messages_length) %}
                                 {% if messages[i][2] == 0 %}
-                                <li>({{ messages[i][3] }}) {{ messages[i][0] }}: {{ messages[i][1] }}</li>
+                                <li> ({{ messages[i][3] }}) {{ messages[i][0] }}: {{ messages[i][1] }}</li>
                                 {% else %}
                                 <li>(me) {{ messages[i][0] }}: {{ messages[i][1] }}</li>
                                 {% endif %}
                             {% endfor %}
                         </ul>
                     </nav>
+                </div>
+                <div>
+                    <p class="user_info"> {{ current_message }}</p>
+                    {% if messages %}
+                        <form action="/clear">
+                            <input type="submit" class="clear_button" value="Clear"/>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
             <br />

@@ -7,6 +7,8 @@ Functions:
 Author:
 
     Justin Spidell
+    Riley Matthews
+    Evan Podrabsky
 
 TODO:
 
@@ -25,14 +27,17 @@ app.secret_key = bytes(1)
 FLASK_USERNAME = ""
 FLASK_FRIENDCODE = ""
 CURRENT_RECIPIENT = 0
+CURRENT_CONNECTION = ""
 
 
 @app.route("/")
 @app.route("/login")
 def login():
+    global CURRENT_CONNECTION
     if main.SERVER_THREAD is not None:
         main.SERVER_THREAD.terminate()
         main.SERVER_THREAD = None
+    CURRENT_CONNECTION = ""
     return flask.render_template("login.html")
 
 
@@ -85,16 +90,22 @@ def registration_attempt():
 
 @app.route("/help")
 def help_page():
+    global CURRENT_CONNECTION
+    CURRENT_CONNECTION = ""
     return flask.render_template("help.html")
 
 
 @app.route("/about")
 def about_page():
+    global CURRENT_CONNECTION
+    CURRENT_CONNECTION = ""
     return flask.render_template("about.html")
 
 
 @app.route("/contactus")
 def contact_us():
+    global CURRENT_CONNECTION
+    CURRENT_CONNECTION = ""
     return flask.render_template("contactus.html")
 
 
@@ -108,7 +119,8 @@ def index():
                                  messages=messages,
                                  messages_length=len(messages),
                                  username_display=main.USERNAME,
-                                 friendcode_display=main.FRIENDCODE)
+                                 friendcode_display=main.FRIENDCODE,
+                                 current_message=CURRENT_CONNECTION)
 
 
 @app.route("/_add_contact", methods=['POST'])
@@ -126,7 +138,7 @@ def _add_contact():
 
 @app.route("/_message_contact", methods=['POST'])
 def _message_contact():
-    global CURRENT_RECIPIENT
+    global CURRENT_RECIPIENT, CURRENT_CONNECTION
     contact_id = request.form["ind"]
     app.logger.debug(f"Messaging contact: {contact_id}")
     CURRENT_RECIPIENT = int(contact_id)
@@ -134,6 +146,7 @@ def _message_contact():
     main._clear_message_list()
     main._populate_message_list(main.USER_ID, contacts[CURRENT_RECIPIENT - 1][0])
     messages = get_messages()
+    CURRENT_CONNECTION = f"Now messaging: {contacts[CURRENT_RECIPIENT - 1][3]}"
     return flask.redirect("/index")
 
 
@@ -185,10 +198,21 @@ def send_message():
     return flask.redirect("/index")
 
 
+@app.route("/clear")
+def clear_chat():
+    global CURRENT_CONNECTION, CURRENT_RECIPIENT
+    CURRENT_CONNECTION = ""
+    CURRENT_RECIPIENT = 0
+    main._clear_message_list()
+    return flask.redirect("/index")
+
+
 @app.errorhandler(404)
 def page_not_found(error):
+    global CURRENT_CONNECTION
     app.logger.debug("Page not found")
     flask.session['linkback'] = flask.url_for("index")
+    CURRENT_CONNECTION = ""
     return flask.render_template('404.html'), 404
 
 
