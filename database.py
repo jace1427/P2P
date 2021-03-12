@@ -153,7 +153,7 @@ class database():
                                    "WHERE contactID = ?",
                                    (contact_id,)).fetchone()
 
-    def store_key(self, key, contact_id) -> None:
+    def store_sec_key(self, key, contact_id) -> None:
         """
         Store a key on a users SecretKey using their contact_id as an
         identifier
@@ -170,6 +170,30 @@ class database():
                             "SET SecretKey = ? "
                             "WHERE contactID = ? ",
                             (key, contact_id))
+
+        self.connection.commit()
+
+        return
+
+    def store_pub_key(self, key, contact_id) -> None:
+        """
+        Store a key on a users PublicKey using their contact_id as an
+        identifier
+
+        Parameters
+            key : key we would like to save to PublicKey belonging to
+                contact_id user
+            contact_id : id of the contact we'd like to attach the key to
+        Returns
+            None
+        """
+        self.cursor.execute("UPDATE contacts "
+                            "SET PublicKey = ? "
+                            "WHERE contactID = ? ",
+                            (key, contact_id))
+
+        self.connection.commit()
+
         return
 
     def list_of_contacts(self, UserID: int) -> list:
@@ -293,7 +317,7 @@ class database():
         return ContactID
 
     def new_message(self, UserID: int, ContactID: int,
-                    IV: str, Text: str, Timestamp: str, Sent: int) -> int:
+                    IV: str, Message: str, TimeDate: str, Sent: int) -> int:
         """
         Create a new message
         Note: the first message should have MessageID=0 and each subsequent
@@ -305,24 +329,23 @@ class database():
             UserID : user's id
             ContactID : contact's id
             IV : initialization vector for encryption
-            Text : contents of the message
-            Timestamp : str of the timestamp of the message
+            Message : contents of the message
+            TimeDate : str of the timestamp of the message
             Sent : whether or not the message was sent (1 if sent, 0 if not)
         Return:
             MessageID : the id of the newly created message
         """
-        values = (UserID, ContactID, IV, Text, Timestamp, Sent)
+        values = (UserID, ContactID, IV, Message, TimeDate, Sent)
 
         # insert the new message into our messages table
         self.insert("messages", self.MESSAGES_COLUMNS, values)
 
-        # Not sure what this does, the other new_*() functions don't have this - Riley
         # commit the changes to the database so we can access them
         self.connection.commit()
-        
+        # WHERE TF DOES VALUES COME FROM
         MessageID = self.cursor.execute("SELECT MessageID "
                                         "FROM messages "
-                                        "WHERE IV=?", (values[2],)).fetchone()[0]
+                                        "WHERE IV=? ", (values[2],)).fetchone()[0]
 
         return MessageID
 
@@ -374,13 +397,8 @@ class database():
             list (nested):
             [[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],..]
         """
-        entries = self.cursor.execute("SELECT * "
+        return self.cursor.execute("SELECT * "
                                       "FROM messages "
                                       "WHERE CONTACTS_USER_UserID = ? AND "
                                       "CONTACTS_ContactID = ?", (UserID,
-                                                                 ContactID))
-
-        if n == 0:
-            return entries
-        else:
-            return entries[:n]
+                                                                 ContactID)).fetchall()

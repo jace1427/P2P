@@ -19,7 +19,6 @@ import sys
 import traceback
 import pickle
 from requests import get
-import ctypes
 
 # general
 from datetime import datetime
@@ -42,25 +41,11 @@ SERVER_THREAD = None
 # networking constants
 BUFSIZE = 4096  # TODO enforce this somewhere
 FORMAT = 'utf-8'  # probably not needed
-SERVER_IP = socket.gethostbyname(socket.gethostname())
-# SERVER_IP = "10.0.0.164"
+# SERVER_IP = socket.gethostbyname(socket.getfqdn())
+# print("OH MY GOD I'M GONNA DIE", socket.gethostname())
+# print("SERVER IP: ", socket.gethostbyname(socket.getfqdn()))
+SERVER_IP = "10.0.0.164"
 PORT = 5550
-
-
-def kill_thread(thread):
-    """
-    thread: a threading.Thread object
-
-    Credit to stackoverflow user "serg06"
-    """
-    global SERVER_THREAD
-    thread_id = thread.ident
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, ctypes.py_object(SystemExit))
-    print("res: ", res)
-    if res > 1:
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(thread_id, 0)
-        print('Exception raise failure')
-    SERVER_THREAD = None
 
 
 def initialize_database(db_name: str):
@@ -98,9 +83,11 @@ def get_user_ip() -> str:
     # print("public ip: ", public_ip)
     return public_ip[:(len(public_ip)-1)]
 
+# SERVER_IP = get_user_ip()
+
+
 
 def encode_friend(ip_address: str, user_id: int, port: int):
-    print(ip_address)
     ip_address = ip_address.split('.')
     ip_address = list(map(int, ip_address))
     a = 24
@@ -119,7 +106,7 @@ def encode_friend(ip_address: str, user_id: int, port: int):
 def decode_friend(friendcode):
     friendcode = int(friendcode, 16)
     ip_address = []
-    for i in range(7):
+    while friendcode != 0:
         ip_address.append(friendcode & 255)
         friendcode = friendcode >> 8
     machine_id = ip_address.pop(0)
@@ -214,8 +201,8 @@ def login(username, password):
         PasswordHash = c.base642bytes(c.string2bytes(user_info[2]))
         if CONTACT_LIST:
             CONTACT_LIST.clear()
-        # if MESSAGE_LIST:
-        #     MESSAGE_LIST.clear()
+        if MESSAGE_LIST:
+            MESSAGE_LIST.clear()
     else:
         # database will return empty list if user not found
         print("User not found")
@@ -250,11 +237,24 @@ def login(username, password):
     _populate_contact_list(USER_ID)
 
     # Step 4: start server
-    SERVER_THREAD = multiprocessing.Process(target=start_server, args=(USER_ID, DB_KEY))
+    SERVER_THREAD = multiprocessing.Process(target=start_server,
+                                            args=(USER_ID,
+                                                  DB_KEY,
+                                                  USER_IV,
+                                                  PUBLIC_KEY,
+                                                  PRIVATE_KEY))
 
 
     return 0
 
+
+def _clear_contact_list():
+    if CONTACT_LIST:
+        CONTACT_LIST.clear()
+
+def _clear_message_list():
+    if MESSAGE_LIST:
+        MESSAGE_LIST.clear()
 
 def _populate_contact_list(UserID: int) -> None:
     """
@@ -289,18 +289,34 @@ def _populate_contact_list(UserID: int) -> None:
         new_contact.append(c.bytes2string(c.decrypt_db(
             c.base642bytes(c.string2bytes(contact[5])), DB_KEY, new_contact[1])))
 
-        # Secret key (decrypt)
-        new_contact.append(c.bytes2string(c.decrypt_db(
-            c.base642bytes(c.string2bytes(contact[7])), DB_KEY, new_contact[1])))
+        # if isinstance(contact[7], str):
+        #     # Secret key (decrypt)
+        #     new_contact.append(c.decrypt_db(
+        #         c.base642bytes(c.string2bytes(contact[7])), DB_KEY, new_contact[1]))
+        # else:
+        #     # Secret key (decrypt)
+        #     # new_contact.append(c.bytes2string(c.decrypt_db(contact[7], DB_KEY, new_contact[1])))
+        #     new_contact.append(c.base642bytes(c.string2bytes(contact[7])))
+        if contact[7] == "temp sk":
+            new_contact.append(contact[7])
+        new_contact.append(c.base642bytes(c.string2bytes(contact[7])))
+
 
         # Public key (decrypt)
-        new_contact.append(c.bytes2string(c.decrypt_db(
-            c.base642bytes(c.string2bytes(contact[8])), DB_KEY, new_contact[1])))
+        # new_contact.append(c.bytes2string(c.decrypt_db(
+        #     c.base642bytes(c.string2bytes(contact[8])), DB_KEY, new_contact[1])))
+        if contact[8] == "temp pk":
+            new_contact.append(contact[8])
+        new_contact.append(c.base642bytes(c.string2bytes(contact[8])))
 
         # Port (decrypt)
         new_contact.append(int(c.bytes2string(c.decrypt_db(
             c.base642bytes(c.string2bytes(contact[6])), DB_KEY, new_contact[1]))))
         CONTACT_LIST.append(new_contact)
+
+    print(f"\n----------------------\n"
+          f"CONTACT_LIST POPULATED\n"
+          f"----------------------\n")
     return
 
 
@@ -317,25 +333,36 @@ def _populate_message_list(UserID: int, ContactID) -> None:
         None
     """
     # might want to clear whatever messages are in the list before populating
-    MESSAGE_LIST = []
-
+    # MESSAGE_LIST = []
+    print(f"SEARCHING DATABASE FOR USER: {UserID}\nAND CONTACT: {ContactID}\n")
     temp_message_list = DATABASE.find_messages(UserID, ContactID)
+    print(f"Messages found in database: {temp_message_list}")
     for message in temp_message_list:
+        # print(f"\n---------------------------------------\n"
+        #       f"NEW MESSAGE BEING ADDED TO MESSAGE LIST\n"
+        #       f"---------------------------------------\n")
         new_message = []
 
         # MessageID (no decrypt)
         new_message.append(int(message[2]))
+        # print(f"MessageID: {new_message[0]}\ntype: {type(new_message[0])}\n")
 
         # Initialization Vector (no decrypt)
         new_message.append(c.base642bytes(c.string2bytes(message[3])))
+        # print(f"MessageIV: {new_message[1]}\ntype: {type(new_message[1])}\n")
 
         # Message Text (decrypt)
         new_message.append(c.bytes2string(c.decrypt_db(
             c.base642bytes(c.string2bytes(message[4])), DB_KEY, new_message[1])))
+        # print(f"Message: {new_message[2]}\ntype: {type(new_message[2])}\n")
 
         # Timestamp (decrypt)
+        dec_timestamp = c.decrypt_db(c.base642bytes(c.string2bytes(message[5])), DB_KEY, new_message[1])
+        # print(f"dec_timestamp: {dec_timestamp}\ntype: {type(dec_timestamp)}\n")
         new_message.append(c.bytes2string(c.decrypt_db(
             c.base642bytes(c.string2bytes(message[5])), DB_KEY, new_message[1])))
+        # placeholder for timedate encryption
+        # new_message.append(c.bytes2string(c.base642bytes(c.string2bytes(message[5]))))
 
         # Sent (decrypt)
         # Might be an Int or a string
@@ -343,6 +370,10 @@ def _populate_message_list(UserID: int, ContactID) -> None:
             c.base642bytes(c.string2bytes(message[6])), DB_KEY, new_message[1]))))
 
         MESSAGE_LIST.append(new_message)
+    print(f"\n----------------------\n"
+          f"CONTACT_LIST POPULATED\n"
+          f"----------------------\n")
+    return
 
 
 def add_contact(Contactname, friendcode, public_key=None):
@@ -372,14 +403,14 @@ def add_contact(Contactname, friendcode, public_key=None):
     # insert new contact into CONTACT_LIST
     CONTACT_LIST.append(new_contact)
 
-    public_key = "temp pk"
+    public_key = "temp pk"  #TODO FIX THIS SHIT DUDE WHAT THE FUCK
 
     # Convert to bytes
     machine_id  = c.string2bytes(str(machine_id))
     Contactname = c.string2bytes(str(Contactname))
     ip_address  = c.string2bytes(str(ip_address))
     port        = c.string2bytes(str(port))
-    public_key  = c.string2bytes(str(public_key))
+    public_key  = c.string2bytes(public_key)
     sk          = c.string2bytes("temp sk")
 
     # encrypt senstitive information
@@ -387,8 +418,8 @@ def add_contact(Contactname, friendcode, public_key=None):
     enc_Contactname = c.encrypt_db(Contactname, DB_KEY, contactIV)
     enc_ip_address  = c.encrypt_db(ip_address, DB_KEY, contactIV)
     enc_port        = c.encrypt_db(port, DB_KEY, contactIV)
-    enc_public_key  = c.encrypt_db(public_key, DB_KEY, contactIV)
-    enc_secret_key  = c.encrypt_db(sk, DB_KEY, contactIV)
+    # enc_public_key  = c.encrypt_db(public_key, DB_KEY, contactIV)
+    # enc_secret_key  = c.encrypt_db(sk, DB_KEY, contactIV)
 
     # create new contact to be added to database
     new_contact_db = (USER_ID,
@@ -397,8 +428,8 @@ def add_contact(Contactname, friendcode, public_key=None):
                      c.bytes2string(c.bytes2base64(enc_Contactname)),
                      c.bytes2string(c.bytes2base64(enc_ip_address)),
                      c.bytes2string(c.bytes2base64(enc_port)),
-                     c.bytes2string(c.bytes2base64(enc_public_key)),
-                     c.bytes2string(c.bytes2base64(enc_secret_key)))
+                     c.bytes2string(c.bytes2base64(public_key)),
+                     c.bytes2string(c.bytes2base64(sk)))
 
     # add contact to database
     cid = DATABASE.new_contact(new_contact_db)[0][0]
@@ -419,6 +450,7 @@ def start_keyexchange(contact):
         nothing
     """
     # create the initial message
+
     message = Message(USER_ID, contact[2], 'a1', PUBLIC_KEY, None)
 
     # send the message
@@ -438,36 +470,58 @@ def receive_message(connection, address):
     """
     global DIFFIE_HELLMAN
 
-    print("you have received a message from: ", address)
+    print(f"\n\n------------------------------------------------\n"
+          f"you have received a message from: {address}\n"
+          f"------------------------------------------------\n")
+    #
+    # print(f"\n\n-----------------------------------------------\n"
+    #       f"                 Contact List\n"
+    #       f"-----------------------------------------------\n{CONTACT_LIST}")
+    #
+    # print(f"\n\n-----------------------------------------------\n"
+    #       f"                 Message List\n"
+    #       f"-----------------------------------------------\n{MESSAGE_LIST}\n\n")
+    #
+    # print(f"\n\n-----------------------------------------------\n"
+    #       f"                   Globals\n"
+    #       f"-----------------------------------------------\n"
+    #       f"PUBLIC_KEY: {PUBLIC_KEY}\ntype: {type(PUBLIC_KEY)}\n\n"
+    #       f"PRIVATE_KEY: {PRIVATE_KEY}\ntype: {type(PRIVATE_KEY)}\n\n")
 
     # NETWORK
     # get the sent message object
-    # NOTE: larger messages might require the recieving to be done in a loop
+    # NOTE: larger messages might require the receiving to be done in a loop
     msg = connection.recv(BUFSIZE)
     message = pickle.loads(msg)
 
     # get machineID from message
     machineID = message.user_ID
+    print("MACHINEID: ", machineID)
+    print("IPADDRESS: ", address[0])
 
     # check if message.machine_id == USER_ID i.e check if message is intended for the current user
     # TODO: we may have to send an error message back to the sender
-    if message.machine_id != USER_ID:
-        print("invalid contact\n")
-        return False
+    # if message.machine_id != USER_ID:
+    #     print("invalid contact\n")
+    #     return False
 
     # close the connection
     connection.close()
 
+    if CONTACT_LIST:
+        CONTACT_LIST.clear()
     _populate_contact_list(USER_ID)
 
     # find contact in CONTACT_LIST based on ip_address and machineID
     index = 0
+    print("contacts", CONTACT_LIST)
     for i in range(len(CONTACT_LIST)):
         if (CONTACT_LIST[i][4] == address[0]) and (CONTACT_LIST[i][2] == machineID):
             # found the right contact
             index = i
             break
 
+    print(f"\n\nindex = {index}\n\n")
 
     # process flags
     if message.flag == 'm':
@@ -480,6 +534,7 @@ def receive_message(connection, address):
 
         # decrypt message
         plaintext = c.decrypt_mssg(message.message, secret_key, message.tag, message.nonce)
+        # print(f"\n\nMESSAGE: {plaintext}\n\n")
 
         # create message iv
         messageIV = c.create_iv()
@@ -492,19 +547,26 @@ def receive_message(connection, address):
         plaintextb = c.string2bytes(str(plaintext))
         datestrb   = c.string2bytes(datestr)
         sent       = c.string2bytes(str(0))
+        # print("datestrb: ", datestrb)
 
         # encrypt sensitive information for the database
         ciphertext    = c.encrypt_db(plaintextb, DB_KEY, messageIV)
         enc_timestamp = c.encrypt_db(datestrb, DB_KEY, messageIV)
         enc_sent      = c.encrypt_db(sent, DB_KEY, messageIV)
 
+        base64_str_timestamp = c.bytes2string(c.bytes2base64(enc_timestamp))
+        # print("base64_str_timestamp: ", base64_str_timestamp)
+
+        decoded_timestamp = c.decrypt_db(c.base642bytes(c.string2bytes(base64_str_timestamp)), DB_KEY, messageIV)
+        # print("decoded_timestamp: ", decoded_timestamp)
+
         # add message to database
         MessageID = DATABASE.new_message(USER_ID,
                                         CONTACT_LIST[index][0],
-                                        messageIV,
-                                        ciphertext,
-                                        enc_timestamp,
-                                        enc_sent)
+                                        c.bytes2string(c.bytes2base64(messageIV)),
+                                        c.bytes2string(c.bytes2base64(ciphertext)),
+                                        c.bytes2string(c.bytes2base64(enc_timestamp)),
+                                        c.bytes2string(c.bytes2base64(enc_sent)))
 
         # Add the new message to MESSAGE_LIST and update the GUI if appropriate
         new_message = [USER_ID, CONTACT_LIST[index][0], MessageID, messageIV, plaintext, datestr, 0]
@@ -515,34 +577,57 @@ def receive_message(connection, address):
 
     # Below are automatic key exchange protocol messages. These messages should not be kept in the database
     elif message.flag == 'a1':
-        print("flag: a1")
+        # print(f"\n\n----------------------------------\n"
+        #       f"             flag: a1\n"
+        #       f"----------------------------------\n")
         # flag a1: step 1 of the public key exchange
         public_key = message.message
+        # print("a1 public key: ", public_key)
+        # print("type(public_key): ", type(public_key))
 
         # add public_key to contact in CONTACT_LIST
+        #TODO Might not be needed if it's in the socket thread
+        print("CURRENTLY WORKING IN: ", CONTACT_LIST[index])
         CONTACT_LIST[index][6] = public_key
 
+        # encrypt the public key before storing in the database
+        # enc_public_key = c.encrypt_db(public_key, DB_KEY, CONTACT_LIST[index][1])
+
+        # DATABASE.store_pub_key(c.bytes2string(c.bytes2base64(enc_public_key)), CONTACT_LIST[index][0])
+        DATABASE.store_pub_key(c.bytes2string(c.bytes2base64(public_key)), CONTACT_LIST[index][0])
+
         # NETWORKING: send this message
+        # print("a1 PUBLIC_KEY: ", PUBLIC_KEY)
         new_message = Message(USER_ID, machineID, 'a2', PUBLIC_KEY)
         send_message(new_message, CONTACT_LIST[index])
 
         return True
 
     elif message.flag == 'a2':
-        print("flag: a2")
+        # print(f"\n\n----------------------------------\n"
+        #       "             flag: a2\n"
+        #       "----------------------------------\n")
         # flag a2: step 2 of the public key exchange
         public_key = message.message
+        # print("public key a2: ", public_key)
 
         # add public_key to contact in CONTACT_LIST
+        print("CURRENTLY WORKING IN: ", CONTACT_LIST[index])
         CONTACT_LIST[index][6] = public_key
+
+        # encrypt the public key before storing in the database
+        # enc_public_key = c.encrypt_db(public_key, DB_KEY, CONTACT_LIST[index][1])
+
+        # DATABASE.store_pub_key(c.bytes2string(c.bytes2base64(enc_public_key)), CONTACT_LIST[index][0])
+        DATABASE.store_pub_key(c.bytes2string(c.bytes2base64(public_key)), CONTACT_LIST[index][0])
 
         # initiate diffie hellman key exchange
         DIFFIE_HELLMAN = c.DiffieHellman()
         g, p = DIFFIE_HELLMAN.create_gp()
         value = DIFFIE_HELLMAN.create_value()
-        #print("g: ", g)
-        #print("p: ", p)
-        #print("value: ", value)
+        # print("a2 g: ", g)
+        # print("a2 p: ", p)
+        # print("a2 value: ", value)
 
         # NETWORKING: send this message
         new_message = Message(USER_ID, machineID, 'b1', (g, p, value))
@@ -551,54 +636,70 @@ def receive_message(connection, address):
         return True
 
     elif message.flag == 'b1':
-        print("flag: b1")
+        # print(f"\n\n----------------------------------\n"
+        #       f"             flag: b1\n"
+        #       f"----------------------------------\n")
         # flag b1: step 1 of the diffie hellman key exchange
         g, p, value = message.message
         DIFFIE_HELLMAN = c.DiffieHellman(g, p)
-        value = DIFFIE_HELLMAN.create_value()
-        #print("g: ", g)
-        #print("p: ", p)
-        #print("value: ", value)
+        other_value = DIFFIE_HELLMAN.create_value()
+
+        # print("b1 g: ", g)
+        # print("b1 p: ", p)
+        # print("b1 value: ", value)
         key = DIFFIE_HELLMAN.create_key(value)
+        # print(f"\nb1 key: {key}\ntype: {type(key)}\n")
 
         # add key to contact in CONTACT_LIST - this completes the contact
+        print("CURRENTLY WORKING IN: ", CONTACT_LIST[index])
         CONTACT_LIST[index][5] = key
 
-        #print(CONTACT_LIST[index])
+        # print("CONTACT_LIST[index]: ", CONTACT_LIST[index])
 
         # first encrypt the key
-        enc_key = c.encrypt_db(key, DB_KEY, USER_IV)
+        # enc_key = c.encrypt_db(key, DB_KEY, CONTACT_LIST[index][1])
 
         # update the database with the key
-        DATABASE.store_key(enc_key, CONTACT_LIST[index][0])
+        # DATABASE.store_sec_key(c.bytes2string(c.bytes2base64(enc_key)), CONTACT_LIST[index][0])
+        DATABASE.store_sec_key(c.bytes2string(c.bytes2base64(key)), CONTACT_LIST[index][0])
 
         # NETWORKING: send this message
-        new_message = Message(USER_ID, machineID, 'b2', value)
+        new_message = Message(USER_ID, machineID, 'b2', other_value)
+        # print("b1 outgoing message: ", other_value)
         send_message(new_message, CONTACT_LIST[index])
 
         return True
 
     elif message.flag == 'b2':
-        print("flag: b2")
+        # print(f"\n\n----------------------------------\n"
+        #       f"             flag: b2\n"
+        #       f"----------------------------------\n")
         value = message.message
+        # print("b2 value: ", value)
         key = DIFFIE_HELLMAN.create_key(value)
+        # print("key b2: ", key)
+        # print(f"\ntype(key): ", type(key))
+        # print("b2 c.bytes2string(key): ", c.bytes2string(key))
 
         # add key to contact in CONTACT_LIST - this completes the contact
+        print("CURRENTLY WORKING IN: ", CONTACT_LIST[index])
         CONTACT_LIST[index][5] = key
 
-        #print(CONTACT_LIST[index])
+        # print(CONTACT_LIST[index])
         
         # first encrypt the key
-        enc_key = c.encrypt_db(key, DB_KEY, USER_IV)
+        # enc_key = c.encrypt_db(key, DB_KEY, CONTACT_LIST[index][1])
 
         # update the database with the key
-        DATABASE.store_key(enc_key, CONTACT_LIST[index][0])
+        # DATABASE.store_sec_key(c.bytes2string(c.bytes2base64(enc_key)), CONTACT_LIST[index][0])
+        DATABASE.store_sec_key(c.bytes2string(c.bytes2base64(key)), CONTACT_LIST[index][0])
 
         return True
 
     else:
         print("Message Flag Error")
         return False
+
 
 
 def create_message(text, contact):
@@ -611,6 +712,7 @@ def create_message(text, contact):
     return: nothing
     """
     # get necessary info
+    text = c.string2bytes(text)
     ip_address = contact[4]
     machineID = contact[2]
     secret_key = contact[5]
@@ -618,9 +720,10 @@ def create_message(text, contact):
     ciphertext, tag, nonce = c.encrypt_mssg(text, secret_key)
     signature = c.create_signature(text, PRIVATE_KEY)
     message = Message(USER_ID, machineID, 'm', ciphertext, signature, tag, nonce)
+    return message
 
 
-# contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey]
+# contact in CONTACT_LIST [ContactID, IV, MachineID, Contactname, IP_address, SecretKey, PublicKey, Port#]
 def send_message(message, contact):
     """
     Sends a message object to the requested contact.
@@ -636,6 +739,7 @@ def send_message(message, contact):
     # get necessary info
     ip_address = contact[4]
     port = contact[7]
+    # print("Port: ", port)
 
     # create a socket
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -643,6 +747,11 @@ def send_message(message, contact):
 
     # pickle the message object and send it
     pickled_message = pickle.dumps(message)
+    # print(f"\n\n-----------------------------------------------\n"
+    #       f"                Sending Message:\n"
+    #       f"{message.message}\n"
+    #       f"-----------------------------------------------\n")
+    # print("pickled_message", pickled_message)
     client.send(pickled_message)
 
     # close the connection
@@ -672,19 +781,21 @@ def send_message(message, contact):
 
         # encrypt sensitive information for the database
         ciphertext = c.encrypt_db(plaintext, DB_KEY, messageIV)
+        enc_timestamp = c.encrypt_db(datestrb, DB_KEY, messageIV)
         enc_sent   = c.encrypt_db(sent, DB_KEY, messageIV)
 
         # add message to database
         MessageID = DATABASE.new_message(USER_ID,
                                         contact[0],
-                                        messageIV,
-                                        ciphertext,
-                                        enc_sent)
+                                        c.bytes2string(c.bytes2base64(messageIV)),
+                                        c.bytes2string(c.bytes2base64(ciphertext)),
+                                        c.bytes2string(c.bytes2base64(enc_timestamp)),
+                                        c.bytes2string(c.bytes2base64(enc_sent)))
 
         # add new message to MESSAGE_LIST
-        new_message = [USER_ID, contact[0], MessageID, messageIV, plaintext, datestr, 1]
-
-        MESSAGE_LIST.append(new_message)
+        # new_message = [USER_ID, contact[0], MessageID, messageIV, plaintext, datestr, 1]
+        #
+        # MESSAGE_LIST.append(new_message)
 
 
 # [[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...]
@@ -698,16 +809,19 @@ def decipher_message_list(messages):
     return messages
 
 
-def start_server(user_id: int, db_key: bytes):
+def start_server(user_id: int, db_key: bytes, user_iv: bytes, public_key: bytes, private_key: bytes):
     """
     The purpose of this function is to
     (a) create a server socket
     (b) listen for connections
     (c) handle incoming messages
     """
-    global USER_ID, DB_KEY, STOP_SERVER
+    global USER_ID, DB_KEY, PUBLIC_KEY, PRIVATE_KEY, USER_IV
     USER_ID = user_id
     DB_KEY = db_key
+    USER_IV = user_iv
+    PUBLIC_KEY = public_key
+    PRIVATE_KEY = private_key
 
     # create a socket
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
