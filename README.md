@@ -60,17 +60,17 @@ Located on the main page are two main areas, the Message Log and the Contacts se
 Under the Contacts section you will see your username displayed along with your friendcode.
 This friendcode is all you need to share with someone you want to chat with. It is a special number that contains your ip address, port number, and user ID.
 
-[Friendcode](https://i.imgur.com/OUwMYFK.png)
+![Friendcode](https://i.imgur.com/OUwMYFK.png)
 
 Below your friendcode is where you can enter the name and friendcode of someone you want to add as a contact. Simply enter the information into the designated text boxes and select 'Add Contact'.
 
-[Add Contact](https://i.imgur.com/ITwqncO.png)
+![Add Contact](https://i.imgur.com/ITwqncO.png)
 
 [RESERVED FOR KEY EXCHANGE DETAILS]
 
 Once keys have been exchanged, messages can be sent. Select the 'Message' button next to the contact you wish to message. Selecting the 'Message' button should populate the chat log with any messages stored in the database between you and the selected contact.
 
-[Message Button](https://i.imgur.com/RCmRwoz.png)
+![Message Button](https://i.imgur.com/RCmRwoz.png)
 
 Once a contact has been selected, enter your message into the text box under the Message Log and select 'Send'. 
 
@@ -78,7 +78,7 @@ NOTE: successful messaging relies on both parties being online and logged in to 
 
 ### Testing and Network Troubleshooting
 
-In order to test the messaging features of the application, you will need to make a copy of the files in another location on your machine. Edit the copy flask_p2p.py in line [x] to use port 5001 instead of port 5000. Then edit the copy main.py in line[x] to use a different port as well.
+In order to test the messaging features of the application on your machine, you will need to make a copy of the files in another location on your machine. Edit the copy flask_p2p.py in line [x] to use port 5001 instead of port 5000. Then edit the copy main.py in line[x] to use a different port as well.
 
 Then open one browser window and navigate to 127.0.0.1:5000 and open another window and navigate to 127.0.0.1:5001. Follow the "Getting Started" and "Messaging" steps in each window. Now you should be able to send messages between those accounts.
 
