@@ -41,7 +41,18 @@ The database uses SQL and is built with pysqlite3.
 
 ## Installation 
 
-TODO
+1. Create a folder and download all the application files into that folder.
+2. To install the neccessary packages run the following command in a terminal window:
+
+```
+pip install -r requirements.txt
+```
+
+3. In a terminal window pointed to the folder in step 1, run the following command:
+
+```
+python3 flask_p2p.py
+```
 
 ## User Guide
 
