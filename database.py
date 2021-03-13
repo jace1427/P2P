@@ -19,13 +19,11 @@
 import sqlite3
 import csv
 
-"""
-    Database class creates an sql database object that we
-    can store and extract data to
-"""
 
 class database():
-    """
+    """Database class creates an sql database object that we
+    can store and extract data to
+
     Parameters
         name : name of database
 
@@ -398,7 +396,6 @@ class database():
             [[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],..]
         """
         return self.cursor.execute("SELECT * "
-                                      "FROM messages "
-                                      "WHERE CONTACTS_USER_UserID = ? AND "
-                                      "CONTACTS_ContactID = ?", (UserID,
-                                                                 ContactID)).fetchall()
+                                   "FROM messages "
+                                   "WHERE CONTACTS_USER_UserID = ? AND "
+                                   "CONTACTS_ContactID = ?", (UserID, ContactID)).fetchall()

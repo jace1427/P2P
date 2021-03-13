@@ -126,6 +126,7 @@ class DiffieHellman:
     """
     class used for Diffie Hellman key exchange
     """
+
     def __init__(self, generator=None, prime=None):
         self.generator = generator
         self.prime = prime
@@ -267,4 +268,3 @@ def check_signature(mssg, signature, key):
         return True
     except (ValueError, TypeError):
         return False
-

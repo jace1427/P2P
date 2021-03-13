@@ -1,10 +1,42 @@
+<!DOCTYPE HTML>
 <html>
+
 <head>
-  <title>Not here</title>
+    <link rel="stylesheet" href="/static/css/p2p.css" />
 </head>
+
+<style type="text/css">
+body {
+    background-color: #2D283E
+}
+</style>
+
 <body>
-<h1>Not here</h1>
-  <p>These are not the bits you were looking for</p>
-<p>Maybe try <a href="{{ url_for("index") }}">the home page</a>?</p>
+    <div class="content">
+        <div class="titles">
+            <div class="title_left">
+                <a href="/login">
+                    <img class="title_image" src="/static/imgs/p2psecure-logo.png" alt="P2PSecure"/>
+                </a>
+            </div>
+            <div class="title_right">
+                <h1 class="title_help">
+                    <a href="/help" class="title_link">Help</a>
+                </h1>
+
+                <h1 class="title_about">
+                    <a href="/about" class="title_link">About</a>
+                </h1>
+
+                <h1 class="title_contactus">
+                    <a href="/contactus" class="title_link">Contact Us</a>
+                </h1>
+            </div>
+        </div>
+
+        <div class="login_box">
+            <h1 style="text-align: center; padding-top: 60px;">404: Page Not Found</h1>
+        </div>
+    </div>
 </body>
 </html>

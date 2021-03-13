@@ -17,13 +17,13 @@ import os
 # NOTES #
 #########
 
-# remove the testing database from the working directory after
-# each execution of this test suite. If this is not done, then 
-# the program will error as it tries to make a database and tables
-# that already exist
+# remove the testing database from the working directory after each execution
+# of this test suite. If this is not done, then the program will error as it
+# tries to make a database and tables that already exist
 
 # create our database to do testing with
 db = database("testdb")
+
 
 class TestDatabaseMethods(unittest.TestCase):
     """
@@ -35,7 +35,8 @@ class TestDatabaseMethods(unittest.TestCase):
 
     def test_create_database(self):
         """
-        Test if a database with the correct name is made by the database initialization function
+        Test if a database with the correct name is made by the database
+        initialization function
 
         Parameters
             None
@@ -47,7 +48,6 @@ class TestDatabaseMethods(unittest.TestCase):
         # this is done using the os library, which allows us to check
         # the status of our file system
         self.assertEqual(True, os.path.exists("testdb"), "Database file was successfully made \n")
-        
 
     def test_create_tables(self):
         """
@@ -61,11 +61,10 @@ class TestDatabaseMethods(unittest.TestCase):
         """
 
         # create each of the tables
-        # first the users table, which stores the credentials of
-        # clients who have registered an account on the machine 
-        # being used
+        # first the users table, which stores the credentials of clients who
+        # have registered an account on the machine being used
         db.create_users()
-        
+
         # then create the contacts table, which stores the logged in
         # users contacts
         db.create_contacts()
@@ -79,9 +78,6 @@ class TestDatabaseMethods(unittest.TestCase):
         self.assertEqual(sqlite3.Cursor, type(db.cursor.execute("SELECT * FROM contacts")), "Contacts table was successfully made\n")
         self.assertEqual(sqlite3.Cursor, type(db.cursor.execute("SELECT * FROM messages")), "Messages table was successfully made\n")
 
-
-
-
     def test_populate_tables(self):
         """
         Test if the tables in the database are properly populated via
@@ -92,9 +88,10 @@ class TestDatabaseMethods(unittest.TestCase):
         Returns
             None
         """
-        
-        # make an entry into the users table (the information we enter doesn't matter since
-        # we won't be doing anything with it, just checking that it exists)
+
+        # make an entry into the users table (the information we enter doesn't
+        # matter since we won't be doing anything with it, just checking that
+        # it exists)
         db.insert("users",db.USER_COLUMNS ,["bob", "blah", "blah", 123, 3, "blah", "blah"])
 
         # make an entry into the contacts table
@@ -123,6 +120,7 @@ class TestDatabaseMethods(unittest.TestCase):
         self.assertNotEqual(db.find_user("bob"), [], "Users table was successfully searched\n")
         self.assertNotEqual(db.find_messages(3,4,1), [], "Messages table was successfully searched\n")
         self.assertNotEqual(db.find_contacts(1), [], "Contacts table was successfully searched\n")
+
 
 if __name__ == '__main__':
     unittest.main()

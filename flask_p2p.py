@@ -1,10 +1,24 @@
 """Flask Backend for the Peer-2-Peer Messaging System.
 
 Functions:
+    login
+    login_attempt
+    registration
+    registration_attempt
+    help_page
+    about_page
+    contact_us
+    index
+    _add_contact
+    _message_contact
+    _send_message
+    _global_key_exchange
+    _clear_chat
+    page_not_found
+    get_contacts
+    get_messages
 
-
-
-Author:
+Authors:
 
     Justin Spidell
     Riley Matthews
@@ -156,8 +170,8 @@ def _message_contact():
     return flask.redirect("/index")
 
 
-@app.route("/send_message", methods=['POST'])
-def send_message():
+@app.route("/_send_message", methods=['POST'])
+def _send_message():
     app.logger.debug("Send message")
 
     # get the text
@@ -210,8 +224,8 @@ def send_message():
     return flask.redirect("/index")
 
 
-@app.route("/key_exchange")
-def global_key_exchange():
+@app.route("/_key_exchange")
+def _global_key_exchange():
     if CURRENT_RECIPIENT == 0:
         flask.flash(u"ERROR: No contact selected, "
                     u"cannot initiate key exchange")
@@ -222,8 +236,8 @@ def global_key_exchange():
     return flask.redirect("/index")
 
 
-@app.route("/clear")
-def clear_chat():
+@app.route("/_clear")
+def _clear_chat():
     app.logger.debug("Clear")
     global CURRENT_CONNECTION, CURRENT_RECIPIENT
     CURRENT_CONNECTION = ""

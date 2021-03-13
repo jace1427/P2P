@@ -54,17 +54,17 @@ body {
                 <div>
                     <p class="user_info"> {{ current_message }}</p>
                     <div>
-                        <form action="/clear">
+                        <form action="/_clear">
                             <input type="submit" class="clear_button" value="Clear"/>
                         </form>
-                        <form action="/key_exchange">
+                        <form action="/_key_exchange">
                             <input type="submit" class="key_button" value="Initiate key exchange"/>
                         </form>
                     </div>
                 </div>
             </div>
             <br />
-            <form action="/send_message" method="POST">
+            <form action="/_send_message" method="POST">
                 <input type="text" name="text" class="message" placeholder="..."/>
                 <input type="submit" class="send" value="Send" />
                 {% with messages = get_flashed_messages() %}

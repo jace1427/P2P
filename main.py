@@ -8,10 +8,6 @@ Authors:
     Justin Spidell
     Evan Podrabsky
     Lannin Nakai
-
-NOTE: A lot of these functions and classes will probably be moved to the network/GUI module
-NOTE: the cryptography module uses byte strings (e.g. b'this is a byte') and database might also.
-NOTE: what is not included in this code/skeleton is how to verify if a message has been received
 """
 
 # our modules
@@ -121,6 +117,7 @@ def initialize_database(db_name: str):
         db.create_messages()
         return db
 
+
 # initialize the database global variable
 DATABASE = initialize_database("Primary")
 
@@ -168,7 +165,7 @@ def get_user_ip() -> str:
         public_ipv4: user's public ipv4 address. type: str
     """
     public_ip = get("http://ipgrab.io").text
-    return public_ip[:(len(public_ip)-1)]
+    return public_ip[:(len(public_ip) - 1)]
 
 
 def encode_friend(ip_address: str, user_id: int, port: int):
@@ -287,7 +284,6 @@ def create_account(username: str, password: str):
                                c.bytes2string(c.bytes2base64(enc_PORT)),
                                c.bytes2string(c.bytes2base64(enc_PublicKey)),
                                c.bytes2string(c.bytes2base64(enc_PrivateKey)))
-    #DATABASE.close()
 
     print(f"New user {username} created! "
           f"UserID: {UserID}")
@@ -381,7 +377,6 @@ def login(username, password):
         print("Incorrect password")
         # if the wrong password is entered
         return -4
-
 
     # Step 3: Populate Contact List global variable
     _populate_contact_list(USER_ID)
@@ -544,28 +539,28 @@ def add_contact(Contactname, friendcode, public_key=None):
     CONTACT_LIST.append(new_contact)
 
     # Convert to bytes
-    machine_id  = c.string2bytes(str(machine_id))
+    machine_id = c.string2bytes(str(machine_id))
     Contactname = c.string2bytes(str(Contactname))
-    ip_address  = c.string2bytes(str(ip_address))
-    port        = c.string2bytes(str(port))
-    public_key  = c.string2bytes("temp pk")
-    sk          = c.string2bytes("temp sk")
+    ip_address = c.string2bytes(str(ip_address))
+    port = c.string2bytes(str(port))
+    public_key = c.string2bytes("temp pk")
+    sk = c.string2bytes("temp sk")
 
     # encrypt senstitive information
-    enc_machine_id  = c.encrypt_db(machine_id, DB_KEY, contactIV)
+    enc_machine_id = c.encrypt_db(machine_id, DB_KEY, contactIV)
     enc_Contactname = c.encrypt_db(Contactname, DB_KEY, contactIV)
-    enc_ip_address  = c.encrypt_db(ip_address, DB_KEY, contactIV)
-    enc_port        = c.encrypt_db(port, DB_KEY, contactIV)
+    enc_ip_address = c.encrypt_db(ip_address, DB_KEY, contactIV)
+    enc_port = c.encrypt_db(port, DB_KEY, contactIV)
 
     # create new contact to be added to database
     new_contact_db = (USER_ID,
-                     c.bytes2string(c.bytes2base64(contactIV)),
-                     c.bytes2string(c.bytes2base64(enc_machine_id)),
-                     c.bytes2string(c.bytes2base64(enc_Contactname)),
-                     c.bytes2string(c.bytes2base64(enc_ip_address)),
-                     c.bytes2string(c.bytes2base64(enc_port)),
-                     c.bytes2string(c.bytes2base64(public_key)),
-                     c.bytes2string(c.bytes2base64(sk)))
+                      c.bytes2string(c.bytes2base64(contactIV)),
+                      c.bytes2string(c.bytes2base64(enc_machine_id)),
+                      c.bytes2string(c.bytes2base64(enc_Contactname)),
+                      c.bytes2string(c.bytes2base64(enc_ip_address)),
+                      c.bytes2string(c.bytes2base64(enc_port)),
+                      c.bytes2string(c.bytes2base64(public_key)),
+                      c.bytes2string(c.bytes2base64(sk)))
 
     # add contact to database
     cid = DATABASE.new_contact(new_contact_db)[0][0]
@@ -599,11 +594,11 @@ def start_keyexchange(contact):
 def receive_message(connection, address):
     """
     This function handles incoming messages.
-    
+
     :param
         connection: python socket object
         address: tuple (ip address of sender, port)
-    :return 
+    :return
         bool
     """
     global DIFFIE_HELLMAN
@@ -656,25 +651,25 @@ def receive_message(connection, address):
         datestr = timestamp.strftime("%m/%d/%Y, %H:%M:%S")
 
         # convert to bytes
-        datestrb   = c.string2bytes(datestr)
-        sent       = c.string2bytes(str(0))
+        datestrb = c.string2bytes(datestr)
+        sent = c.string2bytes(str(0))
 
         # encrypt sensitive information for the database
-        ciphertext    = c.encrypt_db(plaintext, DB_KEY, messageIV)
+        ciphertext = c.encrypt_db(plaintext, DB_KEY, messageIV)
         enc_timestamp = c.encrypt_db(datestrb, DB_KEY, messageIV)
-        enc_sent      = c.encrypt_db(sent, DB_KEY, messageIV)
+        enc_sent = c.encrypt_db(sent, DB_KEY, messageIV)
 
         # add message to database
         MessageID = DATABASE.new_message(USER_ID,
-                                        CONTACT_LIST[index][0],
-                                        c.bytes2string(
-                                            c.bytes2base64(messageIV)),
-                                        c.bytes2string(
-                                            c.bytes2base64(ciphertext)),
-                                        c.bytes2string(
-                                            c.bytes2base64(enc_timestamp)),
-                                        c.bytes2string(
-                                            c.bytes2base64(enc_sent)))
+                                         CONTACT_LIST[index][0],
+                                         c.bytes2string(
+                                             c.bytes2base64(messageIV)),
+                                         c.bytes2string(
+                                             c.bytes2base64(ciphertext)),
+                                         c.bytes2string(
+                                             c.bytes2base64(enc_timestamp)),
+                                         c.bytes2string(
+                                             c.bytes2base64(enc_sent)))
 
         # Add the new message to MESSAGE_LIST and update the GUI if appropriate
         new_message = [USER_ID, CONTACT_LIST[index][0], MessageID,
@@ -765,7 +760,7 @@ def receive_message(connection, address):
 
         # add key to contact in CONTACT_LIST - this completes the contact
         CONTACT_LIST[index][5] = key
-        
+
         # first encrypt the key
         enc_key = c.encrypt_db(key, DB_KEY, CONTACT_LIST[index][1])
 
@@ -791,7 +786,6 @@ def create_message(text, contact):
     """
     # get necessary info
     text = c.string2bytes(text)
-    ip_address = contact[4]
     machineID = contact[2]
     secret_key = contact[5]
     # create message
@@ -856,26 +850,25 @@ def send_message(message, contact):
         datestr = timestamp.strftime("%m/%d/%Y, %H:%M:%S")
 
         # convert to bytes
-        plaintextb = c.string2bytes(str(plaintext))
-        datestrb   = c.string2bytes(datestr)
-        sent       = c.string2bytes(str(1))
+        datestrb = c.string2bytes(datestr)
+        sent = c.string2bytes(str(1))
 
         # encrypt sensitive information for the database
         ciphertext = c.encrypt_db(plaintext, DB_KEY, messageIV)
         enc_timestamp = c.encrypt_db(datestrb, DB_KEY, messageIV)
-        enc_sent   = c.encrypt_db(sent, DB_KEY, messageIV)
+        enc_sent = c.encrypt_db(sent, DB_KEY, messageIV)
 
         # add message to database
         MessageID = DATABASE.new_message(USER_ID,
-                                        contact[0],
-                                        c.bytes2string(
-                                            c.bytes2base64(messageIV)),
-                                        c.bytes2string(
-                                            c.bytes2base64(ciphertext)),
-                                        c.bytes2string(
-                                            c.bytes2base64(enc_timestamp)),
-                                        c.bytes2string(
-                                            c.bytes2base64(enc_sent)))
+                                         contact[0],
+                                         c.bytes2string(
+                                             c.bytes2base64(messageIV)),
+                                         c.bytes2string(
+                                             c.bytes2base64(ciphertext)),
+                                         c.bytes2string(
+                                             c.bytes2base64(enc_timestamp)),
+                                         c.bytes2string(
+                                             c.bytes2base64(enc_sent)))
 
         # add new message to MESSAGE_LIST
         new_message = [USER_ID, contact[0], MessageID,
