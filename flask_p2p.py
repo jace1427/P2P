@@ -9,11 +9,6 @@ Author:
     Justin Spidell
     Riley Matthews
     Evan Podrabsky
-
-TODO:
-
-    Add Images (generally spruce up the website)
-    Make 404 better
 """
 import flask
 from flask import request
@@ -244,5 +239,6 @@ def get_messages():
 
 
 if __name__ == '__main__':
-    print(f"Opening for global access on port {main.PORT}")
-    app.run(port=main.PORT, host="0.0.0.0", debug=True, threaded=False)
+    PORT = 5000
+    print(f"Opening for global access on port {PORT}")
+    app.run(port=PORT, host="0.0.0.0", debug=True, threaded=False)
