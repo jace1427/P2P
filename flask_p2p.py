@@ -131,6 +131,9 @@ def _add_contact():
     app.logger.debug("Add contact")
     friendcode = request.form['friendcode']
     name = request.form['name']
+    if friendcode == "" or name == "":
+        flask.flash(u"ERROR: Must specify a name and friendcode for a contact")
+        return flask.redirect("/index")
     main.add_contact(name, friendcode)
     main._clear_contact_list()
     main._populate_contact_list(main.USER_ID)
@@ -147,8 +150,8 @@ def _message_contact():
     CURRENT_RECIPIENT = int(contact_id)
     contacts = get_contacts()
     main._clear_message_list()
-    main._populate_message_list(main.USER_ID, contacts[CURRENT_RECIPIENT - 1][0])
-    # messages = get_messages()
+    main._populate_message_list(main.USER_ID,
+                                contacts[CURRENT_RECIPIENT - 1][0])
     CURRENT_CONNECTION = f"Now messaging: {contacts[CURRENT_RECIPIENT - 1][3]}"
     return flask.redirect("/index")
 
@@ -178,7 +181,8 @@ def send_message():
         flask.flash(u"ERROR: Message cannot be longer than 255 characters")
         return flask.redirect("/index")
     elif len(contacts[CURRENT_RECIPIENT - 1][5]) < 10:
-        flask.flash(u"ERROR: Cannot initiate messaging with a contact until an initial key exchange has taken place")
+        flask.flash(u"ERROR: Cannot initiate messaging with a contact "
+                    u"until an initial key exchange has taken place")
         return flask.redirect("/index")
 
     # key exchange test
@@ -200,13 +204,18 @@ def send_message():
 
     # update message list
     main._clear_message_list()
-    main._populate_message_list(main.USER_ID, contacts[CURRENT_RECIPIENT - 1][0])
+    main._populate_message_list(main.USER_ID,
+                                contacts[CURRENT_RECIPIENT - 1][0])
 
     return flask.redirect("/index")
 
 
 @app.route("/key_exchange")
 def global_key_exchange():
+    if CURRENT_RECIPIENT == 0:
+        flask.flash(u"ERROR: No contact selected, "
+                    u"cannot initiate key exchange")
+        return flask.redirect("/index")
     app.logger.debug("Key exchange")
     contacts = get_contacts()
     main.start_keyexchange(contacts[CURRENT_RECIPIENT - 1])
@@ -239,7 +248,10 @@ def get_contacts():
 def get_messages():
     main._clear_contact_list()
     main._populate_contact_list(main.USER_ID)
-    return [(i[3], i[2], i[4], main.CONTACT_LIST[CURRENT_RECIPIENT - 1][3]) for i in main.MESSAGE_LIST]
+    return [(i[3],
+             i[2],
+             i[4],
+             main.CONTACT_LIST[CURRENT_RECIPIENT - 1][3]) for i in main.MESSAGE_LIST]
 
 
 if __name__ == '__main__':
