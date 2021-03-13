@@ -28,15 +28,19 @@ This is an attempt to create a trustless system, without a centralized server th
 
 ### Built With
 Users interact with the application through their web browser. The website is created through the use of HTML, CSS, JS, and the web pages are displayed via Flask.
+
 [Flask Documentation](https://flask.palletsprojects.com/en/1.1.x/)
 
 Sending and receving messages is handled with standard python socketing and multiprocessing/threading libraries. Messages are sent over TCP sockets.
+
 [python socket documentation](https://docs.python.org/3/library/socket.html)
 
 Cryptography functions are built with the pycryptodome libraries.
+
 [pycryptodome documentation](https://pypi.org/project/pycryptodome/)
 
 The database uses SQL and is built with pysqlite3.
+
 [pysqlite3 documentation](https://pypi.org/project/pysqlite3/)
 
 ## Installation 
@@ -53,7 +57,7 @@ pip install -r requirements.txt
 ### Getting Started
 
 1. Start the application by running `python3 flask_p2p.py`
-2. In your web browser navigate to 127.0.0.1:5000
+2. In your web browser navigate to `127.0.0.1:5000`
 3. Select 'First-time user click here' on the log in page to go to the registration page.
 4. Enter a username and password then select 'Resgister'
 5. Upon successful registration you will be taken back to the log in page.
@@ -83,9 +87,9 @@ NOTE: successful messaging relies on both parties being online and logged in to 
 
 ### Testing the Application Locally
 
-In order to test the messaging features of the application on your machine yourself, you will need to make a copy of the application files in another folder on your machine. Edit the copy flask_p2p.py in line [247] to use port 5001 instead of port 5000. Then edit the config.txt to use a different port, say 5555 instead of 5550.
+In order to test the messaging features of the application on your machine yourself, you will need to make a copy of the application files in another folder on your machine. Edit the copy flask_p2p.py in line [246] to use port 5001 instead of port 5000. Then edit the config.txt to use a different port, say 5555 instead of 5550.
 
-1. Open one browser window and navigate to 127.0.0.1:5000 and open another window and navigate to 127.0.0.1:5001. 
+1. Open one browser window and navigate to 127.0.0.1:5000, and open another window and navigate to 127.0.0.1:5001. 
 2. Follow the "Getting Started" steps in each window. 
 3. Add each other as contacts using the internal friencode.
 4. In one of the windows, select the Message button next to their contact.
@@ -102,7 +106,7 @@ In order to receive messages addressed to your public ip address, it might be ne
 
 ## Roadmap
 
-There are many things we have learned over the course of this project, and we have several ideas for the future ahead for improvements.
+There are many things we have learned over the course of this project, and we have several ideas for the future ahead.
 
 - Future features
 	- Chat rooms: As of now the application supports messaging between two users. A future feature would be to expand these capabilities to chat with multiple users at a time.
@@ -120,7 +124,7 @@ There are many things we have learned over the course of this project, and we ha
 ## Contacts
 
 - Adam Christensen
-- Riley Matthews - rmatthe2@uoregon.edu
+- Riley Matthews - riley@cs.uoregon.edu
 - Lannin Nakai
 - Evan Podrabsky
 - Justin Spidell
