@@ -88,7 +88,7 @@ NOTE: successful messaging relies on both parties being online and logged in to 
 
 ### Testing the Application Locally
 
-In order to test the messaging features of the application on your machine yourself, you will need to make a copy of the application files in another folder on your machine. Edit the copy flask_p2p.py in line [246] to use port 5001 instead of port 5000. Then edit the config.txt to use a different port, say 5555 instead of 5550.
+In order to test the messaging features of the application on your machine yourself, you will need to make a copy of the application files in another folder on your machine. Edit the copy flask_p2p.py in line [272] to use port 5001 instead of port 5000. Then edit the config.txt to use a different port, say 5555 instead of 5550.
 
 1. Open one browser window and navigate to 127.0.0.1:5000, and open another window and navigate to 127.0.0.1:5001. 
 2. Follow the "Getting Started" steps in each window. 
