@@ -3,6 +3,13 @@
     margin: auto;
 }
 
+.titles {
+    content: "";
+    padding-bottom: 10px;
+    display: table;
+    clear: both;
+}
+
 .title_left {
     color: #802BB1;
     display: flex;
@@ -49,16 +56,20 @@
     background-color: #4C495D;
     padding-left: 25px;
     padding-right: 25px;
-    padding-bottom: 35px;
-    width: 50%
+    padding-bottom: 50px;
+    display: block;
+    margin: auto;
+    width: 30%;
 }
 
 .register_box {
     background-color: #4C495D;
     padding-left: 25px;
     padding-right: 25px;
-    padding-bottom: 63px;
-    width: 50%
+    padding-bottom: 45px;
+    display: block;
+    margin: auto;
+    width: 25%;
 }
 
 .message_log_label {
@@ -294,4 +305,12 @@ li:nth-child(odd) {
     font-size: 16px;
     font-family: Arial, sans-serif;
     color: #FFFFFF;
+}
+
+.misc_div {
+    display: block;
+    background-color: #4C495D;
+    margin: auto;
+    width: 75%;
+    padding: 10px;
 }

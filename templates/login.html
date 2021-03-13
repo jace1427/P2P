@@ -2,63 +2,63 @@
 <html lang="en">
 
 <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
-    <link href="static/css/p2p.css" rel="stylesheet"></script>
-    <style>
-        body {
-            background-color: #2D283E
-        }
-    </style>
+    <link rel="stylesheet" href="/static/css/p2p.css" />
 </head>
+
+<style type="text/css">
+    body {
+        background-color: #2D283E
+    }
+</style>
 
 <body>
     <div class="content">
-        <div class="title_left">
-            <a href="/login">
-                <img class="title_image" src="/static/imgs/p2psecure-logo.png" alt="P2PSecure"/>
-            </a>
-        </div>
-        <div class="title_right">
-            <h1 class="title_help">
-                <a href="/help" class="title_link">Help</a>
-            </h1>
-
-            <h1 class="title_about">
-                <a href="/about" class="title_link">About</a>
-            </h1>
-
-            <h1 class="title_contactus">
-                <a href="/contactus" class="title_link">Contact Us</a>
-            </h1>
-        </div>
-
-        <div class="left">
-            <div class="login_box">
-                <div class="login_label">
-                    <label>Log In</label>
-                </div>
-                <form action="/login_attempt" method="POST">
-                    {% with messages = get_flashed_messages() %}
-                        {% if messages %}
-                            <ul class=flashes>
-                            {% for message in messages %}
-                                <p style="color:#FF0000;
-                                font-family: Arial, sans-serif;
-                                font-size:16px" class="{{ category }}">{{ message }}</p>
-                            {% endfor %}
-                            </ul>
-                        {% endif %}
-                    {% endwith %}
-                    <input type="username" name="username-input" class="textbox username_box" placeholder="Username"/>
-                    <input type="password" name="password-input" class="textbox password_box" placeholder="Password"/>
-                    <div>
-                        <a href="/registration" class="registration_link">First-time user click here</a>
-                        <input type="submit" class="login_button" value="Log in"/>
-                    </div>
-                </form>
+        <div class="titles">
+            <div class="title_left">
+                <a href="/login">
+                    <img class="title_image" src="/static/imgs/p2psecure-logo.png" alt="P2PSecure"/>
+                </a>
             </div>
+            <div class="title_right">
+                <h1 class="title_help">
+                    <a href="/help" class="title_link">Help</a>
+                </h1>
+
+                <h1 class="title_about">
+                    <a href="/about" class="title_link">About</a>
+                </h1>
+
+                <h1 class="title_contactus">
+                    <a href="/contactus" class="title_link">Contact Us</a>
+                </h1>
+            </div>
+        </div>
+
+        <div class="login_box">
+            <div class="login_label">
+                <label>Log In</label>
+            </div>
+            <form action="/login_attempt" method="POST">
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <ul class=flashes>
+                        {% for message in messages %}
+                            <p style="color:#FF0000;
+                            font-family: Arial, sans-serif;
+                            font-size:16px" class="{{ category }}">{{ message }}</p>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+                {% endwith %}
+                <input type="username" name="username-input" class="textbox username_box" placeholder="Username"/>
+                <input type="password" name="password-input" class="textbox password_box" placeholder="Password"/>
+                <div>
+                    <a href="/registration" class="registration_link">First-time user click here</a>
+                    <input type="submit" class="login_button" value="Log in"/>
+                </div>
+            </form>
         </div>
     </div>
 
 </body>
+</html>

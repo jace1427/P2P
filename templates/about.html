@@ -2,47 +2,47 @@
 <html lang="en">
 
 <head>
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
-  <link href="static/css/p2p.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/static/css/p2p.css" />
 </head>
 
 <style>
-
-  body {
-    background-color: #2D283E
-  }
-
+    body {
+        background-color: #2D283E
+    }
 </style>
 
-<head>
+<body>
     <div class="content">
-        <div class="title_left">
-            <a href="/login">
-                <img class="title_image" src="/static/imgs/p2psecure-logo.png" alt="P2PSecure"/>
-            </a>
+        <div class="titles">
+            <div class="title_left">
+                <a href="/login">
+                    <img class="title_image" src="/static/imgs/p2psecure-logo.png" alt="P2PSecure"/>
+                </a>
+            </div>
+            <div class="title_right">
+                <h1 class="title_help">
+                    <a href="/help" class="title_link">Help</a>
+                </h1>
+
+                <h1 class="title_about">
+                    <a href="/about" class="title_link">About</a>
+                </h1>
+
+                <h1 class="title_contactus">
+                    <a href="/contactus" class="title_link">Contact Us</a>
+                </h1>
+            </div>
         </div>
-        <div class="title_right">
-            <h1 class="title_help">
-                <a href="/help" class="title_link">Help</a>
-            </h1>
 
-            <h1 class="title_about">
-                <a href="/about" class="title_link">About</a>
-            </h1>
-
-            <h1 class="title_contactus">
-                <a href="/contactus" class="title_link">Contact Us</a>
-            </h1>
+        <div class="misc_div">
+            <h1> About the Project </h1>
+            <p> P2PSecure is a secure message chat application that places focus on privacy and data security. User information, contacts, and messages are encrypted and stored on a database that exists only on the local machines of the users. 
+            <br /> <br />
+            This is an attempt to create a trustless system, without a centralized server that holds onto all user information/messages.
+            <br /> <br />
+            For more information, see the <a href="https://bitbucket.org/jace1427/cis422_project2">Repo</a>.
+            </p>
         </div>
     </div>
-</head>
-
-<body>
-    <div class="left">
-      <h1> About the Project </h1>
-      <p> P2PSecure is a secure message chat application that places focus on privacy and data security. User information, contacts, and messages are encrypted and stored on a database that exists only on the local machines of the users. 
-      <br> <br>
-      This is an attempt to create a trustless system, without a centralized server that holds onto all user information/messages.
-      </p>
 </body>
+</html>

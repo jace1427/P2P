@@ -123,8 +123,8 @@ There are many things we have learned over the course of this project, and we ha
 
 ## Contacts
 
-- Adam Christensen
-- Riley Matthews - riley@cs.uoregon.edu
-- Lannin Nakai
-- Evan Podrabsky
-- Justin Spidell
+- [Adam Christensen](mailto:christe2@uoregon.edu)
+- [Riley Matthews](mailto:rmatthe2@uoregon.edu)
+- [Lannin Nakai](mailto:lnakai@uoregon.edu)
+- [Evan Podrabsky](mailto:epodrabs@uoregon.edu)
+- [Justin Spidell](mailto:jspidell@uoregon.edu)
