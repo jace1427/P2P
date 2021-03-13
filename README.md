@@ -29,19 +29,19 @@ This is an attempt to create a trustless system, without a centralized server th
 ### Built With
 Users interact with the application through their web browser. The website is created through the use of HTML, CSS, JS, and the web pages are displayed via Flask.
 
-[Flask Documentation](https://flask.palletsprojects.com/en/1.1.x/)
+- [Flask Documentation](https://flask.palletsprojects.com/en/1.1.x/)
 
 Sending and receving messages is handled with standard python socketing and multiprocessing/threading libraries. Messages are sent over TCP sockets.
 
-[python socket documentation](https://docs.python.org/3/library/socket.html)
+- [python socket documentation](https://docs.python.org/3/library/socket.html)
 
 Cryptography functions are built with the pycryptodome libraries.
 
-[pycryptodome documentation](https://pypi.org/project/pycryptodome/)
+- [pycryptodome documentation](https://pypi.org/project/pycryptodome/)
 
 The database uses SQL and is built with pysqlite3.
 
-[pysqlite3 documentation](https://pypi.org/project/pysqlite3/)
+- [pysqlite3 documentation](https://pypi.org/project/pysqlite3/)
 
 ## Installation 
 
