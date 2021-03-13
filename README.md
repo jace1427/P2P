@@ -7,18 +7,19 @@
 
 	- [Built With](#built-with)
 
-2. [Installation](#installation)
+2. [Installation Instructions](#installation)
 
-3. [User Guide](#user-guide)
+3. [User Guide (documentation)](#user-guide)
 
 	- [Getting Started](#getting-started)
 	- [Adding Acontacts, Exchanging Keys, and Messaging](#Adding-Contacts,-Exchanging-Keys,-and-Messaging)
 	- [Testing the Application Locally](#Testing-the-Application-Locally)
 	- [Receiving messages from outside your LAN](#Receiving-messages-from-outside-your-LAN)
+4. [Developer Guide (documentation)](#developer-guide)
 
-4. [Roadmap](#roadmap)
+5. [Roadmap](#roadmap)
 
-5. [Contacts](#contacts)
+6. [Contacts](#contacts)
 
 -----------
 ## About the Project
@@ -103,6 +104,50 @@ Initially the application is set to listen on the local host address '127.0.01' 
 In order to receive messages addressed to your public ip address, it might be necessary to forward the required port in your router settings. 
 
 [Making You Computer Accessible to the Public Internet](https://www.nch.com.au/kb/10046.html)
+
+## Developer Guide
+
+When approaching this application as a developer rather than a client, the importance of understanding the application's modules and how they interact with one another greatly increases. To help a developer get started on developing on top of this application we will describe the modules, their connections, the primary libraries used for the application, and how to troubleshoot likely problems.
+
+### Modules
+
+#### Networking/Main
+
+- Enables the other modules to work together and does networking
+- Encrypts items to be stored in the database using the Database and Cryptography modules
+- Decrypts items to be taken out of the database for user viewing using the Database and Cryptography modules
+- Encrypts and sends messages that the user writes using the UI
+- Decrypts received messages sent to the current user and updates the UI. Then encrypts them to be stored in the database. This uses all other modules.
+- Connects users
+
+#### Cryptography
+
+Provides the following:
+- Encryption
+- Decryption
+- Other cryptographic functions
+
+#### Messaging Interface
+Provides the user the ability to
+- Create a new account
+- Login
+- Send Friend request
+- Send message
+- View contacts
+- View both new messages and old ones stored in the database
+- Access to users’ own friendcode for sharing purposes
+
+#### User Information (database)
+- Stores the following
+- Users
+- Contacts - User contacts
+- Messages - Messages between users and contacts
+
+### Working through the code
+All of the files in this application are well commented with the rationale of the accompanying code explained. So when attempting to modify the application or track a bug found inside of the application (or maybe not inside the application's code but in a module imported from one of the application's imported module), read through the full code for that document (better yet the entire program) so that you understand the purpose of the code, how it was decided upon, and how it affects the rest of the program. These informative comments were made in the hopes that it would prevent any confusion when attempting to work with this code. More detailed descriptions of how modules interact with one another and how use case scenarios look in terms of module execution are provided in the SDS file. When adding or removing code to this program, also add the documentation of the rationale for the addition/deletion.
+
+### Notes for Developers
+A Note about the User Information and Networing/main module. The SQL Database will need to be serialized if any attempt to make this single-thread application into a multi-threaded one is made. The line app.run(..,threaded=False) in the networking module causes the application to run as a single thread, changing this will allow a multi-thread running application. This didn't seem to be a necessary feature since only the user is accessing their database, therefore single thread is acceptable.
 
 ## Roadmap
 
