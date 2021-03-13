@@ -12,7 +12,7 @@
 3. [User Guide](#user-guide)
 
 	- [Getting Started](#getting-started)
-	- [Adding Acontacts, Exchanging Keys, and Messaging](#Adding-Acontacts,-Exchanging-Keys,-and-Messaging)
+	- [Adding Acontacts, Exchanging Keys, and Messaging](#Adding-Contacts,-Exchanging-Keys,-and-Messaging)
 	- [Testing the Application Locally](#Testing-the-Application-Locally)
 	- [Receiving messages from outside your LAN](#Receiving-messages-from-outside-your-LAN)
 
@@ -55,7 +55,7 @@ TODO
 6. Enter your credentials from step 4 and select 'Log in'.
 7. Upon sucessful log in, you will be taken to the main index page.
 
-### Adding Acontacts, Exchanging Keys, and Messaging
+### Adding Contacts, Exchanging Keys, and Messaging
 
 Located on the index page are two main areas, the Message Log and the Contacts section.
 Under the Contacts section you will see your username displayed along with your friendcode.
@@ -64,10 +64,12 @@ This friendcode is all you need to share with someone you want to chat with. It 
 Below your friendcode is where you can enter the name and friendcode of someone you want to add as a contact. Simply enter the information into the designated text boxes and select 'Add Contact'.
 
 Once a contact has been added it is time to exchange keys.
+
 1. Select the message button next to the contacts name.
 2. Select the initiate key exchange button located below the message log.
 
 Once keys have been exchanged, messages can be sent. 
+
 1. Select the 'Message' button next to the contact you wish to message. Selecting the 'Message' button should populate the chat log with any messages stored in the database between you and the selected contact.
 2. Enter your message into the text box underneath the Message Log and select 'Send'.
 3. The sent message should be displayed in the message log, along with any previous messages.
@@ -105,7 +107,7 @@ There are many things we have learned over the course of this project, and we ha
 - Improved UI features
 	- Additional "nice to have" UI features.
 	- Online indicators to tell if your contacts are currently online.
-	- Enhaned look
+	- Enhanced look
 
 ## Contacts
 
