@@ -33,6 +33,7 @@ CURRENT_CONNECTION = ""
 @app.route("/")
 @app.route("/login")
 def login():
+    app.logger.debug("Login")
     global CURRENT_CONNECTION
     if main.SERVER_THREAD is not None:
         main.SERVER_THREAD.terminate()
@@ -43,6 +44,7 @@ def login():
 
 @app.route("/login_attempt", methods=["POST"])
 def login_attempt():
+    app.logger.debug("Login attempt")
     global CURRENT_RECIPIENT
     username = request.form["username-input"]
     password = request.form["password-input"]
@@ -67,11 +69,13 @@ def login_attempt():
 
 @app.route("/registration")
 def registration():
+    app.logger.debug("Registration")
     return flask.render_template("register.html")
 
 
 @app.route("/registration_attempt", methods=["POST"])
 def registration_attempt():
+    app.logger.debug("Registration attempt")
     username = request.form["username-input"]
     password = request.form["password-input"]
     result = main.create_account(username, password)
@@ -90,6 +94,7 @@ def registration_attempt():
 
 @app.route("/help")
 def help_page():
+    app.logger.debug("Help")
     global CURRENT_CONNECTION
     CURRENT_CONNECTION = ""
     return flask.render_template("help.html")
@@ -97,6 +102,7 @@ def help_page():
 
 @app.route("/about")
 def about_page():
+    app.logger.debug("About")
     global CURRENT_CONNECTION
     CURRENT_CONNECTION = ""
     return flask.render_template("about.html")
@@ -104,6 +110,7 @@ def about_page():
 
 @app.route("/contactus")
 def contact_us():
+    app.logger.debug("Contact us")
     global CURRENT_CONNECTION
     CURRENT_CONNECTION = ""
     return flask.render_template("contactus.html")
@@ -111,7 +118,7 @@ def contact_us():
 
 @app.route("/index")
 def index():
-    app.logger.debug("Main page entry")
+    app.logger.debug("Index")
     messages = get_messages()
     contacts = get_contacts()
     return flask.render_template("p2p.html", contacts=contacts,
@@ -126,14 +133,14 @@ def index():
 
 @app.route("/_add_contact", methods=['POST'])
 def _add_contact():
-    app.logger.debug("Add contact request")
+    app.logger.debug("Add contact")
     friendcode = request.form['friendcode']
     name = request.form['name']
     main.add_contact(name, friendcode)
     main._clear_contact_list()
     main._populate_contact_list(main.USER_ID)
-    messages = get_messages()
-    contacts = get_contacts()
+    # messages = get_messages()
+    # contacts = get_contacts()
     return flask.redirect("/index")
 
 
@@ -146,13 +153,14 @@ def _message_contact():
     contacts = get_contacts()
     main._clear_message_list()
     main._populate_message_list(main.USER_ID, contacts[CURRENT_RECIPIENT - 1][0])
-    messages = get_messages()
+    # messages = get_messages()
     CURRENT_CONNECTION = f"Now messaging: {contacts[CURRENT_RECIPIENT - 1][3]}"
     return flask.redirect("/index")
 
 
 @app.route("/send_message", methods=['POST'])
 def send_message():
+    app.logger.debug("Send message")
 
     # get the text
     text = request.form["text"]
@@ -166,7 +174,7 @@ def send_message():
     print(contacts)
 
     # get message list
-    messages = get_messages()
+    # messages = get_messages()
 
     if CURRENT_RECIPIENT == 0:
         flask.flash(u"ERROR: Must specify contact before sending message")
@@ -177,15 +185,6 @@ def send_message():
     elif len(contacts[CURRENT_RECIPIENT - 1][5]) < 10:
         flask.flash(u"ERROR: Cannot initiate messaging with a contact until an initial key exchange has taken place")
         return flask.redirect("/index")
-    # app.logger.debug(f"text to send: {text}")
-
-
-
-
-    # app.logger.debug(f"contacts: {contacts}")
-    #
-    #
-    # app.logger.debug(f"messages: {messages}")
 
     # key exchange test
     # maybe add check if this has been done already
@@ -193,7 +192,6 @@ def send_message():
         app.logger.debug(f"starting the key exchange protocol")
         main.start_keyexchange(contacts[CURRENT_RECIPIENT - 1])
         return flask.redirect("/index")
-
 
     # create the message
     message = main.create_message(text, contacts[CURRENT_RECIPIENT - 1])
@@ -210,6 +208,7 @@ def send_message():
 
 @app.route("/key_exchange")
 def global_key_exchange():
+    app.logger.debug("Key exchange")
     contacts = get_contacts()
     main.start_keyexchange(contacts[CURRENT_RECIPIENT - 1])
     return flask.redirect("/index")
@@ -217,6 +216,7 @@ def global_key_exchange():
 
 @app.route("/clear")
 def clear_chat():
+    app.logger.debug("Clear")
     global CURRENT_CONNECTION, CURRENT_RECIPIENT
     CURRENT_CONNECTION = ""
     CURRENT_RECIPIENT = 0
@@ -226,8 +226,8 @@ def clear_chat():
 
 @app.errorhandler(404)
 def page_not_found(error):
-    global CURRENT_CONNECTION
     app.logger.debug("Page not found")
+    global CURRENT_CONNECTION
     flask.session['linkback'] = flask.url_for("index")
     CURRENT_CONNECTION = ""
     return flask.render_template('404.html'), 404
@@ -244,6 +244,5 @@ def get_messages():
 
 
 if __name__ == '__main__':
-    PORT = 5000
-    print(f"Opening for global access on port {PORT}")
-    app.run(port=PORT, host="0.0.0.0", debug=True, threaded=False)
+    print(f"Opening for global access on port {main.PORT}")
+    app.run(port=main.PORT, host="0.0.0.0", debug=True, threaded=False)
