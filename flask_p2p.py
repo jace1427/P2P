@@ -192,7 +192,11 @@ def send_message():
     message = main.create_message(text, contacts[CURRENT_RECIPIENT - 1])
 
     # send the message
-    main.send_message(message, contacts[CURRENT_RECIPIENT - 1])
+    result = main.send_message(message, contacts[CURRENT_RECIPIENT - 1])
+
+    if result == 0:
+        flask.flash(u"Error: connection failed. Make sure contact is online.")
+        return flask.redirect("/index")
 
     # update message list
     main._clear_message_list()

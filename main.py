@@ -635,7 +635,6 @@ def receive_message(connection, address):
         return False
 
 
-
 def create_message(text, contact):
     """
     Creates a message object with the given text addressed to the given contact
@@ -674,7 +673,7 @@ def send_message(message, contact):
         message: message object
         contact: list
     :return
-        nothing
+        1 is sucessful, 0 if not
     """
 
     # get necessary info
@@ -683,7 +682,13 @@ def send_message(message, contact):
 
     # create a socket
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client.connect((ip_address, port))
+
+    # try connecting the socket to the given host and port
+    try:
+        client.connect((ip_address, port))
+    except:
+        print("Connection Error to", (ip_address, port))
+        return 0
 
     # pickle the message object and send it
     pickled_message = pickle.dumps(message)
@@ -732,6 +737,8 @@ def send_message(message, contact):
         new_message = [USER_ID, contact[0], MessageID, messageIV, plaintext, datestr, 1]
         MESSAGE_LIST.append(new_message)
 
+    return 1
+
 
 # [[UserID, ContactID, MessageID, IV, Text, Timestamp, Sent],...]
 def decipher_message_list(messages):
@@ -743,7 +750,7 @@ def decipher_message_list(messages):
     # may also want to remove unnecessary information (UserID, ContactID, IV)
     return messages
 
-#TODO HERE
+
 def start_server(user_id: int, db_key: bytes, user_iv: bytes,
                  public_ip: str, server_ip: str, port: int,
                  friendcode: str, public_key: bytes, private_key: bytes):

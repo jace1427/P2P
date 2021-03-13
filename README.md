@@ -111,8 +111,11 @@ There are many things we have learned over the course of this project, and we ha
 	- Before the application can be succesfully deployed for wide scale use we would like to improve the networking capabilities to make the application more user friendly and "plug & play". Currently the need to configure router settings is too much to ask of the general user base we would eventually like to reach.
 - Improved UI features
 	- Additional "nice to have" UI features.
+	- Automatic message population in the chat log.
 	- Online indicators to tell if your contacts are currently online.
 	- Enhanced look
+- Bug fixes and continued testing
+	- Issues with key exchanges with multiple contacts.
 
 ## Contacts
 
