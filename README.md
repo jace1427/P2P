@@ -48,17 +48,11 @@ The database uses SQL and is built with pysqlite3.
 pip install -r requirements.txt
 ```
 
-3. In a terminal window pointed to the folder in step 1, run the following command:
-
-```
-python3 flask_p2p.py
-```
-
 ## User Guide
 
 ### Getting Started
 
-1. Start the application by running [TODO]
+1. Start the application by running `python3 flask_p2p.py`
 2. In your web browser navigate to 127.0.0.1:5000
 3. Select 'First-time user click here' on the log in page to go to the registration page.
 4. Enter a username and password then select 'Resgister'
