@@ -122,13 +122,15 @@ When approaching this application as a developer rather than a client, the impor
 
 #### Cryptography
 
-Provides the following:
+Provides the following
+
 - Encryption
 - Decryption
 - Other cryptographic functions
 
 #### Messaging Interface
 Provides the user the ability to
+
 - Create a new account
 - Login
 - Send Friend request
@@ -138,6 +140,7 @@ Provides the user the ability to
 - Access to users’ own friendcode for sharing purposes
 
 #### User Information (database)
+
 - Stores the following
 - Users
 - Contacts - User contacts
